@@ -1,0 +1,1067 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Restudio Documents - Fixed Toolbar</title>
+    <link rel="icon" href="https://i.postimg.cc/66MLbbg8/restudio-profile.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        :root {
+            --bg: #1e1e1e;
+            --surface: #252526;
+            --text: #cccccc;
+            --primary: #007acc;
+            --border: #3c3c3c;
+            --hover: #2a2d2e;
+            --canvas-bg: #2b2b2b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #cccccc;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .top-bar {
+            height: 48px;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            flex-shrink: 0;
+            z-index: 100;
+            justify-content: space-between;
+        }
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .top-bar img.logo {
+            height: 28px;
+            width: auto;
+        }
+        .top-bar .brand-text {
+            font-family: 'Tiny5', sans-serif;
+            font-size: 22px;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+        .exit-focus-btn {
+            display: none;
+            background: #3c3c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        body.focus-mode .exit-focus-btn {
+            display: inline-block;
+        }
+        .toolbar {
+            background: #2d2d2d;
+            border-bottom: 1px solid #3c3c3c;
+            flex-shrink: 0;
+            padding: 4px 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            min-height: 48px;
+            overflow: visible;
+            z-index: 99;
+        }
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            border-right: 1px solid #4a4a4a;
+            padding-right: 6px;
+            margin-right: 6px;
+        }
+        .tool-group:last-child {
+            border-right: none;
+        }
+        .tool-btn {
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: 0.15s;
+            position: relative;
+        }
+        .tool-btn:hover {
+            background: #3c3c3c;
+        }
+        .tool-btn .material-icons {
+            font-size: 18px;
+        }
+        .tool-btn.active {
+            background: #094771;
+        }
+        .tool-btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            background: transparent;
+        }
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            background: #2d2d2d;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            min-width: 180px;
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            padding: 6px 0;
+            flex-direction: column;
+        }
+        .dropdown-container.open .dropdown-content {
+            display: flex;
+        }
+        .dropdown-item {
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #f0f0f0;
+        }
+        .dropdown-item:hover {
+            background: #094771;
+        }
+        .dropdown-item .check-icon {
+            margin-left: auto;
+            font-size: 16px;
+            color: #4ec9ff;
+        }
+        .color-picker-popup {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            background: #2d2d2d;
+            border: 1px solid #4a4a4a;
+            border-radius: 8px;
+            padding: 12px;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+            min-width: 240px;
+        }
+        .color-picker-popup.show {
+            display: block;
+        }
+        .color-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 28px);
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        .color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .color-swatch:hover {
+            transform: scale(1.15);
+            border-color: #fff;
+            z-index: 2;
+        }
+        .color-picker-input {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #3c3c3c;
+        }
+        .color-picker-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .zoom-level {
+            color: #aaa;
+            font-size: 12px;
+            margin: 0 4px;
+            min-width: 40px;
+            text-align: center;
+        }
+        .canvas-wrapper {
+            flex: 1;
+            background: #1e1e1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            position: relative;
+        }
+        #fabric-canvas-container {
+            background: var(--canvas-bg);
+            box-shadow: 0 0 0 1px #3c3c3c, 0 8px 20px rgba(0, 0, 0, 0.4);
+            margin: 20px;
+            width: 900px;
+            height: 600px;
+            position: relative;
+        }
+        canvas {
+            display: block;
+        }
+        body.focus-mode .toolbar {
+            display: none;
+        }
+        body.focus-mode .top-bar {
+            background: #111;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <div class="top-left">
+            <img class="logo" src="https://i.postimg.cc/s2j0rzBZ/swrh-restudio.png" alt="ReStudio Logo">
+            <span class="brand-text">Documents</span>
+        </div>
+        <button class="exit-focus-btn" id="exitFocusBtn"><span class="material-icons">close_fullscreen</span> Exit</button>
+    </header>
+
+    <div class="toolbar" id="toolbar">
+        <div class="tool-group">
+            <button class="tool-btn" data-action="newDoc" title="New empty canvas"><span class="material-icons">note_add</span> New</button>
+        </div>
+        <div class="tool-group">
+            <button class="tool-btn" data-action="undo" title="Undo (Ctrl+Z)"><span class="material-icons">undo</span></button>
+            <button class="tool-btn" data-action="redo" title="Redo (Ctrl+Y)"><span class="material-icons">redo</span></button>
+            <button class="tool-btn" data-action="deleteSelected" title="Delete selected (Del key)"><span class="material-icons">delete</span> Delete</button>
+        </div>
+        <div class="tool-group">
+            <button class="tool-btn" data-action="addText" title="Add text box"><span class="material-icons">text_fields</span> Text</button>
+            <button class="tool-btn" data-action="addImage" title="Insert image from file"><span class="material-icons">image</span> Image</button>
+            <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+            <button class="tool-btn" data-action="addRectangle" title="Add rectangle"><span class="material-icons">crop_square</span> Rectangle</button>
+            <button class="tool-btn" data-action="addCircle" title="Add circle"><span class="material-icons">circle</span> Circle</button>
+            <button class="tool-btn" data-action="addQR" title="Add QR code from text or URL"><span class="material-icons">qr_code</span> QR</button>
+        </div>
+        <div class="tool-group">
+            <button class="tool-btn" data-action="bold" title="Bold"><span class="material-icons">format_bold</span></button>
+            <button class="tool-btn" data-action="italic" title="Italic"><span class="material-icons">format_italic</span></button>
+            <button class="tool-btn" data-action="underline" title="Underline"><span class="material-icons">format_underlined</span></button>
+            <div class="dropdown-container" id="fontSizeContainer">
+                <button class="tool-btn" title="Font size"><span class="material-icons">format_size</span> Size</button>
+                <div class="dropdown-content" id="fontSizeMenu">
+                    <div class="dropdown-item" data-fontsize="12">12px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="18">18px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="24">24px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="32">32px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="48">48px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                </div>
+            </div>
+            <button class="tool-btn" data-action="indentInc" title="Increase text indent"><span class="material-icons">format_indent_increase</span></button>
+            <button class="tool-btn" data-action="indentDec" title="Decrease text indent"><span class="material-icons">format_indent_decrease</span></button>
+            <div class="dropdown-container" id="lineHeightContainer">
+                <button class="tool-btn" title="Line height"><span class="material-icons">format_line_spacing</span> Line H</button>
+                <div class="dropdown-content" id="lineHeightMenu">
+                    <div class="dropdown-item" data-lineheight="1">1.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="1.5">1.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="2">2.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="2.5">2.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="3">3.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                </div>
+            </div>
+            <div class="dropdown-container" id="textTransformContainer">
+                <button class="tool-btn" title="Change text case"><span class="material-icons">text_fields</span> Aa</button>
+                <div class="dropdown-content" id="textTransformMenu">
+                    <div class="dropdown-item" data-transform="uppercase">UPPERCASE</div>
+                    <div class="dropdown-item" data-transform="lowercase">lowercase</div>
+                    <div class="dropdown-item" data-transform="capitalize">Capitalize Each Word</div>
+                </div>
+            </div>
+        </div>
+        <div class="tool-group">
+            <div class="dropdown-container" id="fillColorContainer">
+                <button class="tool-btn" id="fillColorBtn" title="Element color (fill) - for text & shapes only"><span class="material-icons">format_color_text</span> Fill</button>
+                <div class="color-picker-popup" id="fillColorPicker">
+                    <span class="color-picker-label">Select element color</span>
+                    <div class="color-picker-grid" id="fillColorGrid"></div>
+                    <input type="color" class="color-picker-input" id="fillColorCustom" value="#ffffff">
+                </div>
+            </div>
+            <div class="dropdown-container" id="bgColorContainer">
+                <button class="tool-btn" id="bgColorBtn" title="Background color - only for text"><span class="material-icons">format_color_fill</span> BG</button>
+                <div class="color-picker-popup" id="bgColorPicker">
+                    <span class="color-picker-label">Select text background color</span>
+                    <div class="color-picker-grid" id="bgColorGrid"></div>
+                    <input type="color" class="color-picker-input" id="bgColorCustom" value="#3498db">
+                </div>
+            </div>
+            <div class="dropdown-container" id="canvasBgContainer">
+                <button class="tool-btn" title="Page background color"><span class="material-icons">palette</span> Page BG</button>
+                <div class="color-picker-popup" id="canvasBgPicker">
+                    <span class="color-picker-label">Select page background color</span>
+                    <div class="color-picker-grid" id="canvasBgGrid"></div>
+                    <input type="color" class="color-picker-input" id="canvasBgCustom" value="#2b2b2b">
+                </div>
+            </div>
+        </div>
+        <div class="tool-group">
+            <button class="tool-btn" data-action="alignLeft" title="Align left"><span class="material-icons">format_align_left</span></button>
+            <button class="tool-btn" data-action="alignCenter" title="Align center"><span class="material-icons">format_align_center</span></button>
+            <button class="tool-btn" data-action="alignRight" title="Align right"><span class="material-icons">format_align_right</span></button>
+        </div>
+        <div class="tool-group">
+            <button class="tool-btn" data-action="bringForward" title="Bring forward"><span class="material-icons">arrow_upward</span> Forward</button>
+            <button class="tool-btn" data-action="sendBackward" title="Send backward"><span class="material-icons">arrow_downward</span> Backward</button>
+            <button class="tool-btn" data-action="zoomIn" title="Zoom in"><span class="material-icons">zoom_in</span></button>
+            <span class="zoom-level" id="zoomLevelDisplay">100%</span>
+            <button class="tool-btn" data-action="zoomOut" title="Zoom out"><span class="material-icons">zoom_out</span></button>
+            <button class="tool-btn" data-action="focusMode" title="Focus mode (Esc to exit)"><span class="material-icons">center_focus_strong</span> Focus</button>
+        </div>
+        <div class="tool-group">
+            <button class="tool-btn" data-action="exportRedc" title="Export as .REDC file"><span class="material-icons">download</span> Export REDC</button>
+            <button class="tool-btn" id="importJsonBtn" title="Import .REDC file"><span class="material-icons">upload</span> Import</button>
+            <input type="file" id="importFileInput" accept=".redc,.restudio,.json" style="display:none;">
+        </div>
+    </div>
+
+    <div class="canvas-wrapper" id="canvasWrapper">
+        <div id="fabric-canvas-container"></div>
+    </div>
+
+    <script>
+        (function() {
+            const container = document.getElementById('fabric-canvas-container');
+            const zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
+            const undoBtn = document.querySelector('[data-action="undo"]');
+            const redoBtn = document.querySelector('[data-action="redo"]');
+            const boldBtn = document.querySelector('[data-action="bold"]');
+            const italicBtn = document.querySelector('[data-action="italic"]');
+            const underlineBtn = document.querySelector('[data-action="underline"]');
+            const alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
+            const alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
+            const alignRightBtn = document.querySelector('[data-action="alignRight"]');
+            const fillColorBtn = document.getElementById('fillColorBtn');
+            const bgColorBtn = document.getElementById('bgColorBtn');
+
+            let canvas;
+            let historyStack = [],
+                historyIndex = -1;
+            let zoomLevel = 1;
+            let historySaveTimer = null;
+            let hasUnsavedChanges = false;
+
+            // ============ Refresh Warning ============
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return e.returnValue;
+                }
+            });
+
+            // Track changes
+            function markAsChanged() {
+                hasUnsavedChanges = true;
+            }
+
+            function saveHistoryState() {
+                if (!canvas) return;
+                const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
+                if (historyStack.length === 0 || historyStack[historyIndex] !== state) {
+                    historyStack = historyStack.slice(0, historyIndex + 1);
+                    historyStack.push(state);
+                    historyIndex++;
+                    markAsChanged();
+                }
+                updateUndoRedoButtons();
+            }
+
+            function scheduleHistorySave() {
+                if (historySaveTimer) clearTimeout(historySaveTimer);
+                historySaveTimer = setTimeout(saveHistoryState, 150);
+            }
+
+            function resetHistoryFromCurrentCanvas() {
+                historyStack = [];
+                historyIndex = -1;
+                const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
+                historyStack.push(state);
+                historyIndex = 0;
+                updateUndoRedoButtons();
+            }
+
+            function updateUndoRedoButtons() {
+                if (undoBtn) undoBtn.disabled = (historyIndex <= 0);
+                if (redoBtn) redoBtn.disabled = (historyIndex >= historyStack.length - 1);
+            }
+
+            function undo() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    loadHistoryState();
+                }
+            }
+
+            function redo() {
+                if (historyIndex < historyStack.length - 1) {
+                    historyIndex++;
+                    loadHistoryState();
+                }
+            }
+
+            function loadHistoryState() {
+                if (!canvas || historyStack.length === 0) return;
+                canvas.loadFromJSON(historyStack[historyIndex], () => {
+                    canvas.renderAll();
+                    updateUndoRedoButtons();
+                    updateStyleButtonsState();
+                });
+            }
+
+            function isImage(obj) {
+                return obj && obj.type === 'image';
+            }
+
+            function updateStyleButtonsState() {
+                const activeObj = canvas.getActiveObject();
+                if (!activeObj) {
+                    boldBtn.classList.remove('active');
+                    italicBtn.classList.remove('active');
+                    underlineBtn.classList.remove('active');
+                    alignLeftBtn.classList.remove('active');
+                    alignCenterBtn.classList.remove('active');
+                    alignRightBtn.classList.remove('active');
+                    updateFontSizeCheckmark(null);
+                    updateLineHeightCheckmark(null);
+                    if (fillColorBtn) fillColorBtn.disabled = true;
+                    if (bgColorBtn) bgColorBtn.disabled = true;
+                    return;
+                }
+
+                const img = isImage(activeObj);
+
+                if (activeObj.type === 'textbox') {
+                    boldBtn.classList.toggle('active', activeObj.fontWeight === 'bold');
+                    italicBtn.classList.toggle('active', activeObj.fontStyle === 'italic');
+                    underlineBtn.classList.toggle('active', !!activeObj.underline);
+                    const align = activeObj.textAlign || 'left';
+                    alignLeftBtn.classList.toggle('active', align === 'left');
+                    alignCenterBtn.classList.toggle('active', align === 'center');
+                    alignRightBtn.classList.toggle('active', align === 'right');
+                    updateFontSizeCheckmark(activeObj.fontSize);
+                    updateLineHeightCheckmark(activeObj.lineHeight);
+                    if (fillColorBtn) fillColorBtn.disabled = false;
+                    if (bgColorBtn) bgColorBtn.disabled = false;
+                } else {
+                    boldBtn.classList.remove('active');
+                    italicBtn.classList.remove('active');
+                    underlineBtn.classList.remove('active');
+                    alignLeftBtn.classList.remove('active');
+                    alignCenterBtn.classList.remove('active');
+                    alignRightBtn.classList.remove('active');
+                    updateFontSizeCheckmark(null);
+                    updateLineHeightCheckmark(null);
+                    // 👇 FIX: disable Fill for ANY image (QR, uploaded, etc.)
+                    if (fillColorBtn) fillColorBtn.disabled = img;
+                    if (bgColorBtn) bgColorBtn.disabled = true;
+                }
+            }
+
+            function updateFontSizeCheckmark(fontSize) {
+                document.querySelectorAll('#fontSizeMenu .dropdown-item').forEach(item => {
+                    const check = item.querySelector('.check-icon');
+                    if (check) {
+                        check.style.display = (fontSize && parseInt(item.dataset.fontsize) === fontSize) ?
+                            'inline' : 'none';
+                    }
+                });
+            }
+
+            function updateLineHeightCheckmark(lineHeight) {
+                document.querySelectorAll('#lineHeightMenu .dropdown-item').forEach(item => {
+                    const check = item.querySelector('.check-icon');
+                    if (check) {
+                        const val = parseFloat(item.dataset.lineheight);
+                        check.style.display = (lineHeight && Math.abs(val - lineHeight) < 0.01) ?
+                            'inline' : 'none';
+                    }
+                });
+            }
+
+            const presetColors = [
+                '#ffffff', '#000000', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+                '#1abc9c', '#3498db', '#9b59b6', '#ecf0f1', '#c0392b', '#2980b9',
+                '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#f39c12', '#d35400',
+                '#7f8c8d', '#bdc3c7', '#34495e', '#95a5a6'
+            ];
+
+            function buildColorPalette(gridId, customInputId, callback) {
+                const grid = document.getElementById(gridId);
+                grid.innerHTML = '';
+                presetColors.forEach(color => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch';
+                    swatch.style.backgroundColor = color;
+                    swatch.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        callback(color);
+                        const customInput = document.getElementById(customInputId);
+                        if (customInput) customInput.value = color;
+                        const popup = grid.closest('.color-picker-popup');
+                        if (popup) popup.classList.remove('show');
+                    });
+                    grid.appendChild(swatch);
+                });
+                const customInput = document.getElementById(customInputId);
+                if (customInput) {
+                    customInput.addEventListener('input', (e) => {
+                        callback(e.target.value);
+                    });
+                }
+            }
+
+            function initCanvas() {
+                const existingCanvas = document.getElementById('fabric-canvas');
+                if (existingCanvas) existingCanvas.remove();
+                const newCanvasElem = document.createElement('canvas');
+                newCanvasElem.id = 'fabric-canvas';
+                newCanvasElem.width = container.clientWidth || 900;
+                newCanvasElem.height = container.clientHeight || 600;
+                container.innerHTML = '';
+                container.appendChild(newCanvasElem);
+                canvas = new fabric.Canvas('fabric-canvas', {
+                    preserveObjectStacking: true,
+                    selection: true,
+                    backgroundColor: '#2b2b2b'
+                });
+                canvas.setWidth(container.clientWidth);
+                canvas.setHeight(container.clientHeight);
+                canvas.renderAll();
+                canvas.on('object:added', () => scheduleHistorySave());
+                canvas.on('object:modified', () => scheduleHistorySave());
+                canvas.on('object:removed', () => scheduleHistorySave());
+                canvas.on('selection:created', () => updateStyleButtonsState());
+                canvas.on('selection:updated', () => updateStyleButtonsState());
+                canvas.on('selection:cleared', () => {
+                    boldBtn.classList.remove('active');
+                    italicBtn.classList.remove('active');
+                    underlineBtn.classList.remove('active');
+                    alignLeftBtn.classList.remove('active');
+                    alignCenterBtn.classList.remove('active');
+                    alignRightBtn.classList.remove('active');
+                    updateFontSizeCheckmark(null);
+                    updateLineHeightCheckmark(null);
+                    if (fillColorBtn) fillColorBtn.disabled = true;
+                    if (bgColorBtn) bgColorBtn.disabled = true;
+                });
+            }
+            initCanvas();
+            resetHistoryFromCurrentCanvas();
+
+            window.addEventListener('resize', () => {
+                if (canvas) {
+                    canvas.setWidth(container.clientWidth);
+                    canvas.setHeight(container.clientHeight);
+                    canvas.renderAll();
+                }
+            });
+
+            function newCanvas() {
+                if (!canvas) return;
+                if (hasUnsavedChanges) {
+                    if (!confirm('You have unsaved changes. Are you sure you want to create a new canvas?')) {
+                        return;
+                    }
+                }
+                canvas.clear();
+                canvas.backgroundColor = '#2b2b2b';
+                zoomLevel = 1;
+                canvas.setZoom(1);
+                canvas.renderAll();
+                resetHistoryFromCurrentCanvas();
+                updateZoomDisplay();
+                hasUnsavedChanges = false;
+            }
+
+            function addTextBox() {
+                const textbox = new fabric.Textbox('New Text', {
+                    left: 100,
+                    top: 100,
+                    width: 200,
+                    fontSize: 24,
+                    fill: '#ffffff',
+                    fontFamily: 'Segoe UI',
+                    hasControls: true,
+                    hasBorders: true
+                });
+                canvas.add(textbox);
+                canvas.setActiveObject(textbox);
+                canvas.renderAll();
+                scheduleHistorySave();
+            }
+
+            function addRectangle() {
+                const rect = new fabric.Rect({
+                    left: 150,
+                    top: 150,
+                    width: 120,
+                    height: 80,
+                    fill: '#3498db',
+                    stroke: '#ffffff',
+                    strokeWidth: 2
+                });
+                canvas.add(rect);
+                canvas.setActiveObject(rect);
+                canvas.renderAll();
+                scheduleHistorySave();
+            }
+
+            function addCircle() {
+                const circle = new fabric.Circle({
+                    left: 200,
+                    top: 200,
+                    radius: 50,
+                    fill: '#e67e22',
+                    stroke: '#fff',
+                    strokeWidth: 2
+                });
+                canvas.add(circle);
+                canvas.setActiveObject(circle);
+                canvas.renderAll();
+                scheduleHistorySave();
+            }
+
+            function addImageFromFile() {
+                document.getElementById('imageFileInput').click();
+            }
+
+            function addQRCode() {
+                const text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
+                if (!text || !text.trim()) return;
+                const qrUrl =
+                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text.trim())}`;
+                fabric.Image.fromURL(qrUrl, (img) => {
+                    img.set({
+                        left: (canvas.width - img.width * img.scaleX) / 2,
+                        top: (canvas.height - img.height * img.scaleY) / 2
+                    });
+                    canvas.add(img);
+                    canvas.setActiveObject(img);
+                    canvas.renderAll();
+                    scheduleHistorySave();
+                }, { crossOrigin: 'anonymous' });
+            }
+
+            function handleImageFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    event.target.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fabric.Image.fromURL(e.target.result, (img) => {
+                        const maxWidth = canvas.width * 0.6;
+                        const maxHeight = canvas.height * 0.6;
+                        if (img.width > maxWidth || img.height > maxHeight) {
+                            const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                            img.scale(scale);
+                        } else {
+                            img.scale(1);
+                        }
+                        img.set({
+                            left: (canvas.width - img.width * img.scaleX) / 2,
+                            top: (canvas.height - img.height * img.scaleY) / 2
+                        });
+                        canvas.add(img);
+                        canvas.setActiveObject(img);
+                        canvas.renderAll();
+                        scheduleHistorySave();
+                    }, { crossOrigin: 'anonymous' });
+                };
+                reader.onerror = () => alert('Failed to load image file.');
+                reader.readAsDataURL(file);
+                event.target.value = '';
+            }
+
+            function deleteSelected() {
+                const active = canvas.getActiveObjects();
+                if (active.length) {
+                    active.forEach(obj => canvas.remove(obj));
+                    canvas.discardActiveObject();
+                    canvas.renderAll();
+                    scheduleHistorySave();
+                }
+            }
+
+            function bringForward() {
+                const obj = canvas.getActiveObject();
+                if (obj) {
+                    canvas.bringForward(obj);
+                    canvas.renderAll();
+                    scheduleHistorySave();
+                }
+            }
+
+            function sendBackward() {
+                const obj = canvas.getActiveObject();
+                if (obj) {
+                    canvas.sendBackwards(obj);
+                    canvas.renderAll();
+                    scheduleHistorySave();
+                }
+            }
+
+            function applyToSelected(callback) {
+                const actives = canvas.getActiveObjects();
+                if (actives.length) {
+                    actives.forEach(obj => callback(obj));
+                    canvas.renderAll();
+                    scheduleHistorySave();
+                    updateStyleButtonsState();
+                }
+            }
+
+            function setBold() {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        obj.fontWeight = (obj.fontWeight === 'bold') ? 'normal' : 'bold';
+                    }
+                });
+            }
+
+            function setItalic() {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        obj.fontStyle = (obj.fontStyle === 'italic') ? 'normal' : 'italic';
+                    }
+                });
+            }
+
+            function setUnderline() {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        obj.underline = !obj.underline;
+                    }
+                });
+            }
+
+            function setFontSize(size) {
+                applyToSelected(obj => {
+                    if (obj.fontSize !== undefined) obj.fontSize = parseInt(size);
+                });
+                document.getElementById('fontSizeContainer').classList.remove('open');
+            }
+
+            function setLineHeight(height) {
+                applyToSelected(obj => {
+                    if (obj.lineHeight !== undefined) obj.lineHeight = parseFloat(height);
+                });
+                document.getElementById('lineHeightContainer').classList.remove('open');
+            }
+
+            function setFillColor(color) {
+                applyToSelected(obj => {
+                    // 👇 FIX: skip fill for any image (QR or uploaded)
+                    if (obj.type !== 'image') {
+                        obj.set('fill', color);
+                    }
+                });
+            }
+
+            function setBackgroundColor(color) {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        obj.set('backgroundColor', color);
+                    }
+                });
+            }
+
+            function setTextAlign(align) {
+                applyToSelected(obj => {
+                    if (obj.textAlign !== undefined) obj.textAlign = align;
+                });
+            }
+
+            function setCanvasBgColor(color) {
+                canvas.setBackgroundColor(color, () => canvas.renderAll());
+                markAsChanged();
+            }
+
+            function increaseIndent() {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        obj.text = '    ' + obj.text;
+                    }
+                });
+            }
+
+            function decreaseIndent() {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        const trimmed = obj.text.replace(/^ {1,4}/, '');
+                        obj.text = trimmed;
+                    }
+                });
+            }
+
+            function transformText(type) {
+                applyToSelected(obj => {
+                    if (obj.type === 'textbox') {
+                        switch (type) {
+                            case 'uppercase':
+                                obj.text = obj.text.toUpperCase();
+                                break;
+                            case 'lowercase':
+                                obj.text = obj.text.toLowerCase();
+                                break;
+                            case 'capitalize':
+                                obj.text = obj.text.replace(/\b\w/g, c => c.toUpperCase());
+                                break;
+                        }
+                    }
+                });
+                document.getElementById('textTransformContainer').classList.remove('open');
+            }
+
+            function updateZoomDisplay() {
+                zoomLevelDisplay.textContent = Math.round(zoomLevel * 100) + '%';
+            }
+
+            function zoomIn() {
+                zoomLevel = Math.min(2, zoomLevel + 0.1);
+                canvas.setZoom(zoomLevel);
+                canvas.renderAll();
+                updateZoomDisplay();
+            }
+
+            function zoomOut() {
+                zoomLevel = Math.max(0.5, zoomLevel - 0.1);
+                canvas.setZoom(zoomLevel);
+                canvas.renderAll();
+                updateZoomDisplay();
+            }
+
+            function exportAsREDC() {
+                // .REDC = pure JSON with .redc extension
+                const dataStr = JSON.stringify(canvas.toJSON(['id']), null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'canvas.redc';
+                a.click();
+                URL.revokeObjectURL(url);
+                hasUnsavedChanges = false;
+            }
+
+            function importJSON(file) {
+                if (hasUnsavedChanges) {
+                    if (!confirm('Importing will replace the current canvas content. Are you sure?')) return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        canvas.loadFromJSON(json, () => {
+                            canvas.renderAll();
+                            resetHistoryFromCurrentCanvas();
+                            updateZoomDisplay();
+                            hasUnsavedChanges = false;
+                        });
+                    } catch (err) {
+                        alert('Invalid JSON file. Cannot import.');
+                    }
+                };
+                reader.onerror = () => alert('Error reading file.');
+                reader.readAsText(file);
+            }
+
+            const actionsMap = {
+                newDoc: newCanvas,
+                undo,
+                redo,
+                deleteSelected,
+                addText: addTextBox,
+                addImage: addImageFromFile,
+                addRectangle,
+                addCircle,
+                addQR: addQRCode,
+                bold: setBold,
+                italic: setItalic,
+                underline: setUnderline,
+                alignLeft: () => setTextAlign('left'),
+                alignCenter: () => setTextAlign('center'),
+                alignRight: () => setTextAlign('right'),
+                bringForward,
+                sendBackward,
+                zoomIn,
+                zoomOut,
+                focusMode: () => document.body.classList.toggle('focus-mode'),
+                exportRedc: exportAsREDC,
+                indentInc: increaseIndent,
+                indentDec: decreaseIndent
+            };
+
+            document.getElementById('toolbar').addEventListener('click', (e) => {
+                const btn = e.target.closest('.tool-btn');
+                if (!btn || btn.closest('.dropdown-container')) return;
+                const action = btn.dataset.action;
+                if (action && actionsMap[action]) actionsMap[action]();
+            });
+
+            document.getElementById('imageFileInput').addEventListener('change', handleImageFileSelect);
+
+            document.querySelectorAll('[data-fontsize]').forEach(el => {
+                el.addEventListener('click', () => {
+                    setFontSize(el.dataset.fontsize);
+                    updateFontSizeCheckmark(parseInt(el.dataset.fontsize));
+                });
+            });
+
+            document.querySelectorAll('[data-lineheight]').forEach(el => {
+                el.addEventListener('click', () => {
+                    setLineHeight(el.dataset.lineheight);
+                    updateLineHeightCheckmark(parseFloat(el.dataset.lineheight));
+                });
+            });
+
+            document.querySelectorAll('[data-transform]').forEach(el => {
+                el.addEventListener('click', () => transformText(el.dataset.transform));
+            });
+
+            buildColorPalette('fillColorGrid', 'fillColorCustom', setFillColor);
+            buildColorPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
+            buildColorPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
+
+            function setupColorDropdown(containerId, pickerId) {
+                const container = document.getElementById(containerId);
+                const picker = document.getElementById(pickerId);
+                const btn = container.querySelector('.tool-btn');
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.color-picker-popup.show').forEach(p => {
+                        if (p !== picker) p.classList.remove('show');
+                    });
+                    document.querySelectorAll('.dropdown-container.open').forEach(d => {
+                        if (d !== container) d.classList.remove('open');
+                    });
+                    picker.classList.toggle('show');
+                });
+                picker.addEventListener('click', (e) => e.stopPropagation());
+            }
+
+            setupColorDropdown('fillColorContainer', 'fillColorPicker');
+            setupColorDropdown('bgColorContainer', 'bgColorPicker');
+            setupColorDropdown('canvasBgContainer', 'canvasBgPicker');
+
+            document.querySelectorAll(
+                    '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
+                )
+                .forEach(cont => {
+                    const btn = cont.querySelector('.tool-btn');
+                    if (btn) {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            document.querySelectorAll('.color-picker-popup.show').forEach(p => p
+                                .classList.remove('show'));
+                            cont.classList.toggle('open');
+                        });
+                    }
+                    cont.addEventListener('click', (e) => e.stopPropagation());
+                });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-container.open').forEach(c => c.classList.remove('open'));
+                document.querySelectorAll('.color-picker-popup.show').forEach(p => p.classList.remove('show'));
+            });
+
+            document.getElementById('importJsonBtn').addEventListener('click', () => {
+                document.getElementById('importFileInput').click();
+            });
+
+            document.getElementById('importFileInput').addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    importJSON(e.target.files[0]);
+                    e.target.value = '';
+                }
+            });
+
+            document.getElementById('exitFocusBtn').addEventListener('click', () => document.body.classList.remove(
+                'focus-mode'));
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
+                    document.body.classList.remove('focus-mode');
+                }
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                }
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+                if (e.key === 'Delete' && !e.ctrlKey && !e.altKey && document.activeElement === document.body) {
+                    e.preventDefault();
+                    deleteSelected();
+                }
+            });
+
+            updateZoomDisplay();
+            updateUndoRedoButtons();
+            if (fillColorBtn) fillColorBtn.disabled = true;
+            if (bgColorBtn) bgColorBtn.disabled = true;
+        })();
+    </script>
+</body>
+</html>
