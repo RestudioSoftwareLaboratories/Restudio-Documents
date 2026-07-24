@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,8 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Tabler Icons Webfont -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/tabler-icons.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js">
+    </script>
+    <!-- TypeScript Compiler (UMD) for in-browser transpilation -->
+    <script src="https://cdn.jsdelivr.net/npm/typescript@5.3.3/lib/typescript.min.js">
     </script>
     <style>
         * {
@@ -72,9 +75,14 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
+            align-items: center;
+            gap: 6px;
+        }
+        .exit-focus-btn .ti {
+            font-size: 16px;
         }
         body.focus-mode .exit-focus-btn {
-            display: inline-block;
+            display: inline-flex;
         }
         .toolbar {
             background: #2d2d2d;
@@ -118,7 +126,7 @@
         .tool-btn:hover {
             background: #3c3c3c;
         }
-        .tool-btn .material-icons {
+        .tool-btn .ti {
             font-size: 18px;
         }
         .tool-btn.active {
@@ -262,6 +270,19 @@
             background: #555;
             border-radius: 6px;
         }
+        /* Tabler Icons sizing in toolbar */
+        .tool-btn .ti {
+            font-size: 18px;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        .exit-focus-btn .ti {
+            font-size: 16px;
+        }
+        .dropdown-item .ti.check-icon {
+            font-size: 16px;
+            color: #4ec9ff;
+        }
     </style>
 </head>
 <body>
@@ -270,54 +291,97 @@
             <img class="logo" src="https://i.postimg.cc/s2j0rzBZ/swrh-restudio.png" alt="ReStudio Logo">
             <span class="brand-text">Documents</span>
         </div>
-        <button class="exit-focus-btn" id="exitFocusBtn"><span class="material-icons">close_fullscreen</span> Exit</button>
+        <button class="exit-focus-btn" id="exitFocusBtn">
+            <i class="ti ti-arrows-minimize"></i> Exit
+        </button>
     </header>
 
     <div class="toolbar" id="toolbar">
+        <!-- New -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="newDoc" title="New empty canvas"><span class="material-icons">note_add</span> New</button>
+            <button class="tool-btn" data-action="newDoc" title="New empty canvas">
+                <i class="ti ti-file-plus"></i> New
+            </button>
         </div>
+
+        <!-- Undo / Redo / Delete -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="undo" title="Undo (Ctrl+Z)"><span class="material-icons">undo</span></button>
-            <button class="tool-btn" data-action="redo" title="Redo (Ctrl+Y)"><span class="material-icons">redo</span></button>
-            <button class="tool-btn" data-action="deleteSelected" title="Delete selected (Del key)"><span class="material-icons">delete</span> Delete</button>
+            <button class="tool-btn" data-action="undo" title="Undo (Ctrl+Z)">
+                <i class="ti ti-arrow-back-up"></i>
+            </button>
+            <button class="tool-btn" data-action="redo" title="Redo (Ctrl+Y)">
+                <i class="ti ti-arrow-forward-up"></i>
+            </button>
+            <button class="tool-btn" data-action="deleteSelected" title="Delete selected (Del key)">
+                <i class="ti ti-trash"></i> Delete
+            </button>
         </div>
+
+        <!-- Insert elements -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="addText" title="Add text box"><span class="material-icons">text_fields</span> Text</button>
-            <button class="tool-btn" data-action="addImage" title="Insert image from file"><span class="material-icons">image</span> Image</button>
+            <button class="tool-btn" data-action="addText" title="Add text box">
+                <i class="ti ti-typography"></i> Text
+            </button>
+            <button class="tool-btn" data-action="addImage" title="Insert image from file">
+                <i class="ti ti-photo"></i> Image
+            </button>
             <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
-            <button class="tool-btn" data-action="addRectangle" title="Add rectangle"><span class="material-icons">crop_square</span> Rectangle</button>
-            <button class="tool-btn" data-action="addCircle" title="Add circle"><span class="material-icons">circle</span> Circle</button>
-            <button class="tool-btn" data-action="addQR" title="Add QR code from text or URL"><span class="material-icons">qr_code</span> QR</button>
+            <button class="tool-btn" data-action="addRectangle" title="Add rectangle">
+                <i class="ti ti-square"></i> Rectangle
+            </button>
+            <button class="tool-btn" data-action="addCircle" title="Add circle">
+                <i class="ti ti-circle"></i> Circle
+            </button>
+            <button class="tool-btn" data-action="addQR" title="Add QR code from text or URL">
+                <i class="ti ti-qrcode"></i> QR
+            </button>
         </div>
+
+        <!-- Text styling -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="bold" title="Bold"><span class="material-icons">format_bold</span></button>
-            <button class="tool-btn" data-action="italic" title="Italic"><span class="material-icons">format_italic</span></button>
-            <button class="tool-btn" data-action="underline" title="Underline"><span class="material-icons">format_underlined</span></button>
+            <button class="tool-btn" data-action="bold" title="Bold">
+                <i class="ti ti-bold"></i>
+            </button>
+            <button class="tool-btn" data-action="italic" title="Italic">
+                <i class="ti ti-italic"></i>
+            </button>
+            <button class="tool-btn" data-action="underline" title="Underline">
+                <i class="ti ti-underline"></i>
+            </button>
             <div class="dropdown-container" id="fontSizeContainer">
-                <button class="tool-btn" title="Font size"><span class="material-icons">format_size</span> Size</button>
+                <button class="tool-btn" title="Font size">
+                    <i class="ti ti-text-size"></i> Size
+                </button>
                 <div class="dropdown-content" id="fontSizeMenu">
-                    <div class="dropdown-item" data-fontsize="12">12px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="18">18px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="24">24px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="32">32px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="48">48px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="12">12px <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="18">18px <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="24">24px <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="32">32px <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="48">48px <i class="check-icon ti ti-check" style="display:none;"></i></div>
                 </div>
             </div>
-            <button class="tool-btn" data-action="indentInc" title="Increase text indent"><span class="material-icons">format_indent_increase</span></button>
-            <button class="tool-btn" data-action="indentDec" title="Decrease text indent"><span class="material-icons">format_indent_decrease</span></button>
+            <button class="tool-btn" data-action="indentInc" title="Increase text indent">
+                <i class="ti ti-indent-increase"></i>
+            </button>
+            <button class="tool-btn" data-action="indentDec" title="Decrease text indent">
+                <i class="ti ti-indent-decrease"></i>
+            </button>
             <div class="dropdown-container" id="lineHeightContainer">
-                <button class="tool-btn" title="Line height"><span class="material-icons">format_line_spacing</span> Line H</button>
+                <button class="tool-btn" title="Line height">
+                    <i class="ti ti-line-height"></i> Line H
+                </button>
                 <div class="dropdown-content" id="lineHeightMenu">
-                    <div class="dropdown-item" data-lineheight="1">1.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="1.5">1.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="2">2.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="2.5">2.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="3">3.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="1">1.0 <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="1.5">1.5 <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="2">2.0 <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="2.5">2.5 <i class="check-icon ti ti-check" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="3">3.0 <i class="check-icon ti ti-check" style="display:none;"></i></div>
                 </div>
             </div>
             <div class="dropdown-container" id="textTransformContainer">
-                <button class="tool-btn" title="Change text case"><span class="material-icons">text_fields</span> Aa</button>
+                <button class="tool-btn" title="Change text case">
+                    <i class="ti ti-text-case"></i> Aa
+                </button>
                 <div class="dropdown-content" id="textTransformMenu">
                     <div class="dropdown-item" data-transform="uppercase">UPPERCASE</div>
                     <div class="dropdown-item" data-transform="lowercase">lowercase</div>
@@ -325,9 +389,13 @@
                 </div>
             </div>
         </div>
+
+        <!-- Colors -->
         <div class="tool-group">
             <div class="dropdown-container" id="fillColorContainer">
-                <button class="tool-btn" id="fillColorBtn" title="Element color (fill) - for text & shapes only"><span class="material-icons">format_color_text</span> Fill</button>
+                <button class="tool-btn" id="fillColorBtn" title="Element color (fill) - for text & shapes only">
+                    <i class="ti ti-palette"></i> Fill
+                </button>
                 <div class="color-picker-popup" id="fillColorPicker">
                     <span class="color-picker-label">Select element color</span>
                     <div class="color-picker-grid" id="fillColorGrid"></div>
@@ -335,7 +403,9 @@
                 </div>
             </div>
             <div class="dropdown-container" id="bgColorContainer">
-                <button class="tool-btn" id="bgColorBtn" title="Background color - only for text"><span class="material-icons">format_color_fill</span> BG</button>
+                <button class="tool-btn" id="bgColorBtn" title="Background color - only for text">
+                    <i class="ti ti-bucket"></i> BG
+                </button>
                 <div class="color-picker-popup" id="bgColorPicker">
                     <span class="color-picker-label">Select text background color</span>
                     <div class="color-picker-grid" id="bgColorGrid"></div>
@@ -343,7 +413,9 @@
                 </div>
             </div>
             <div class="dropdown-container" id="canvasBgContainer">
-                <button class="tool-btn" title="Page background color"><span class="material-icons">palette</span> Page BG</button>
+                <button class="tool-btn" title="Page background color">
+                    <i class="ti ti-palette"></i> Page BG
+                </button>
                 <div class="color-picker-popup" id="canvasBgPicker">
                     <span class="color-picker-label">Select page background color</span>
                     <div class="color-picker-grid" id="canvasBgGrid"></div>
@@ -351,22 +423,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- Align -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="alignLeft" title="Align left"><span class="material-icons">format_align_left</span></button>
-            <button class="tool-btn" data-action="alignCenter" title="Align center"><span class="material-icons">format_align_center</span></button>
-            <button class="tool-btn" data-action="alignRight" title="Align right"><span class="material-icons">format_align_right</span></button>
+            <button class="tool-btn" data-action="alignLeft" title="Align left">
+                <i class="ti ti-align-left"></i>
+            </button>
+            <button class="tool-btn" data-action="alignCenter" title="Align center">
+                <i class="ti ti-align-center"></i>
+            </button>
+            <button class="tool-btn" data-action="alignRight" title="Align right">
+                <i class="ti ti-align-right"></i>
+            </button>
         </div>
+
+        <!-- Arrange / Zoom / Focus -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="bringForward" title="Bring forward"><span class="material-icons">arrow_upward</span> Forward</button>
-            <button class="tool-btn" data-action="sendBackward" title="Send backward"><span class="material-icons">arrow_downward</span> Backward</button>
-            <button class="tool-btn" data-action="zoomIn" title="Zoom in"><span class="material-icons">zoom_in</span></button>
+            <button class="tool-btn" data-action="bringForward" title="Bring forward">
+                <i class="ti ti-arrow-up"></i> Forward
+            </button>
+            <button class="tool-btn" data-action="sendBackward" title="Send backward">
+                <i class="ti ti-arrow-down"></i> Backward
+            </button>
+            <button class="tool-btn" data-action="zoomIn" title="Zoom in">
+                <i class="ti ti-zoom-in"></i>
+            </button>
             <span class="zoom-level" id="zoomLevelDisplay">100%</span>
-            <button class="tool-btn" data-action="zoomOut" title="Zoom out"><span class="material-icons">zoom_out</span></button>
-            <button class="tool-btn" data-action="focusMode" title="Focus mode (Esc to exit)"><span class="material-icons">center_focus_strong</span> Focus</button>
+            <button class="tool-btn" data-action="zoomOut" title="Zoom out">
+                <i class="ti ti-zoom-out"></i>
+            </button>
+            <button class="tool-btn" data-action="focusMode" title="Focus mode (Esc to exit)">
+                <i class="ti ti-focus-centered"></i> Focus
+            </button>
         </div>
+
+        <!-- Export / Import -->
         <div class="tool-group">
-            <button class="tool-btn" data-action="exportRedc" title="Export as .REDC file"><span class="material-icons">download</span> Export REDC</button>
-            <button class="tool-btn" id="importJsonBtn" title="Import .REDC file"><span class="material-icons">upload</span> Import</button>
+            <button class="tool-btn" data-action="exportRedc" title="Export as .REDC file">
+                <i class="ti ti-download"></i> Export REDC
+            </button>
+            <button class="tool-btn" id="importJsonBtn" title="Import .REDC file">
+                <i class="ti ti-upload"></i> Import
+            </button>
             <input type="file" id="importFileInput" accept=".redc,.restudio,.json" style="display:none;">
         </div>
     </div>
@@ -375,692 +473,887 @@
         <div id="fabric-canvas-container"></div>
     </div>
 
-    <script>
-        (function() {
-            const container = document.getElementById('fabric-canvas-container');
-            const zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
-            const undoBtn = document.querySelector('[data-action="undo"]');
-            const redoBtn = document.querySelector('[data-action="redo"]');
-            const boldBtn = document.querySelector('[data-action="bold"]');
-            const italicBtn = document.querySelector('[data-action="italic"]');
-            const underlineBtn = document.querySelector('[data-action="underline"]');
-            const alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
-            const alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
-            const alignRightBtn = document.querySelector('[data-action="alignRight"]');
-            const fillColorBtn = document.getElementById('fillColorBtn');
-            const bgColorBtn = document.getElementById('bgColorBtn');
+    <!-- TypeScript source code -->
+    <script type="text/typescript" id="ts-source">
+        // ============================================================
+        // TypeScript Source for Restudio Documents Editor
+        // Uses Tabler Icons & Fabric.js
+        // Compiled in-browser via TypeScript compiler (dev/demo only)
+        // ============================================================
 
-            let canvas;
-            let historyStack = [],
-                historyIndex = -1;
-            let zoomLevel = 1;
-            let historySaveTimer = null;
-            let hasUnsavedChanges = false;
+        // ---- Global Fabric declaration ----
+        declare var fabric: any;
 
-            // ============ Refresh Warning ============
-            window.addEventListener('beforeunload', function(e) {
-                if (hasUnsavedChanges) {
-                    e.preventDefault();
-                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-                    return e.returnValue;
+        // ---- Interfaces ----
+        interface FabricTextbox extends FabricObject {
+            type: 'textbox';
+            text: string;
+            fontSize: number;
+            fontFamily: string;
+            fontWeight: string | number;
+            fontStyle: string;
+            underline: boolean;
+            textAlign: string;
+            lineHeight: number;
+            backgroundColor: string;
+        }
+
+        interface FabricImage extends FabricObject {
+            type: 'image';
+            src: string;
+            width: number;
+            height: number;
+            scaleX: number;
+            scaleY: number;
+        }
+
+        interface FabricRect extends FabricObject {
+            type: 'rect';
+            width: number;
+            height: number;
+            rx?: number;
+            ry?: number;
+        }
+
+        interface FabricCircle extends FabricObject {
+            type: 'circle';
+            radius: number;
+        }
+
+        interface FabricObject {
+            type: string;
+            left: number;
+            top: number;
+            width?: number;
+            height?: number;
+            fill?: string;
+            stroke?: string;
+            strokeWidth?: number;
+            fontSize?: number;
+            fontFamily?: string;
+            fontWeight?: string | number;
+            fontStyle?: string;
+            underline?: boolean;
+            textAlign?: string;
+            lineHeight?: number;
+            backgroundColor?: string;
+            text?: string;
+            scaleX?: number;
+            scaleY?: number;
+            set(prop: string, value: any): any;
+            set(options: Record<string, any>): any;
+        }
+
+        interface FabricCanvas {
+            add(obj: FabricObject): void;
+            remove(obj: FabricObject): void;
+            getActiveObject(): FabricObject | null;
+            getActiveObjects(): FabricObject[];
+            setActiveObject(obj: FabricObject): void;
+            discardActiveObject(): void;
+            renderAll(): void;
+            clear(): void;
+            setWidth(w: number): void;
+            setHeight(h: number): void;
+            setZoom(zoom: number): void;
+            getZoom(): number;
+            setBackgroundColor(color: string, callback?: () => void): void;
+            bringForward(obj: FabricObject): void;
+            sendBackwards(obj: FabricObject): void;
+            toJSON(propertiesToInclude?: string[]): any;
+            loadFromJSON(json: any, callback?: () => void): void;
+            on(event: string, handler: (...args: any[]) => void): void;
+            width: number;
+            height: number;
+            backgroundColor: string;
+        }
+
+        // ---- DOM Element references with proper types ----
+        const container = document.getElementById('fabric-canvas-container') as HTMLDivElement;
+        const zoomLevelDisplay = document.getElementById('zoomLevelDisplay') as HTMLSpanElement;
+        const undoBtn = document.querySelector('[data-action="undo"]') as HTMLButtonElement;
+        const redoBtn = document.querySelector('[data-action="redo"]') as HTMLButtonElement;
+        const boldBtn = document.querySelector('[data-action="bold"]') as HTMLButtonElement;
+        const italicBtn = document.querySelector('[data-action="italic"]') as HTMLButtonElement;
+        const underlineBtn = document.querySelector('[data-action="underline"]') as HTMLButtonElement;
+        const alignLeftBtn = document.querySelector('[data-action="alignLeft"]') as HTMLButtonElement;
+        const alignCenterBtn = document.querySelector('[data-action="alignCenter"]') as HTMLButtonElement;
+        const alignRightBtn = document.querySelector('[data-action="alignRight"]') as HTMLButtonElement;
+        const fillColorBtn = document.getElementById('fillColorBtn') as HTMLButtonElement;
+        const bgColorBtn = document.getElementById('bgColorBtn') as HTMLButtonElement;
+        const toolbar = document.getElementById('toolbar') as HTMLDivElement;
+        const imageFileInput = document.getElementById('imageFileInput') as HTMLInputElement;
+        const importJsonBtn = document.getElementById('importJsonBtn') as HTMLButtonElement;
+        const importFileInput = document.getElementById('importFileInput') as HTMLInputElement;
+        const exitFocusBtn = document.getElementById('exitFocusBtn') as HTMLButtonElement;
+
+        // ---- Application State ----
+        let canvas: FabricCanvas;
+        let historyStack: string[] = [];
+        let historyIndex: number = -1;
+        let zoomLevel: number = 1;
+        let historySaveTimer: number | null = null;
+        let hasUnsavedChanges: boolean = false;
+
+        // ---- Preset Colors ----
+        const presetColors: string[] = [
+            '#ffffff', '#000000', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+            '#1abc9c', '#3498db', '#9b59b6', '#ecf0f1', '#c0392b', '#2980b9',
+            '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#f39c12', '#d35400',
+            '#7f8c8d', '#bdc3c7', '#34495e', '#95a5a6'
+        ];
+
+        // ============ Refresh Warning ============
+        window.addEventListener('beforeunload', function (e: BeforeUnloadEvent): void {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+
+        // ---- Utility Functions ----
+        function markAsChanged(): void {
+            hasUnsavedChanges = true;
+        }
+
+        function saveHistoryState(): void {
+            if (!canvas) return;
+            const state: string = JSON.stringify(canvas.toJSON(['id', 'customType']));
+            if (historyStack.length === 0 || historyStack[historyIndex] !== state) {
+                historyStack = historyStack.slice(0, historyIndex + 1);
+                historyStack.push(state);
+                historyIndex++;
+                markAsChanged();
+            }
+            updateUndoRedoButtons();
+        }
+
+        function scheduleHistorySave(): void {
+            if (historySaveTimer) clearTimeout(historySaveTimer);
+            historySaveTimer = window.setTimeout(saveHistoryState, 150);
+        }
+
+        function resetHistoryFromCurrentCanvas(): void {
+            historyStack = [];
+            historyIndex = -1;
+            const state: string = JSON.stringify(canvas.toJSON(['id', 'customType']));
+            historyStack.push(state);
+            historyIndex = 0;
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons(): void {
+            if (undoBtn) undoBtn.disabled = (historyIndex <= 0);
+            if (redoBtn) redoBtn.disabled = (historyIndex >= historyStack.length - 1);
+        }
+
+        function undo(): void {
+            if (historyIndex > 0) {
+                historyIndex--;
+                loadHistoryState();
+            }
+        }
+
+        function redo(): void {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                loadHistoryState();
+            }
+        }
+
+        function loadHistoryState(): void {
+            if (!canvas || historyStack.length === 0) return;
+            canvas.loadFromJSON(historyStack[historyIndex], () => {
+                canvas.renderAll();
+                updateUndoRedoButtons();
+                updateStyleButtonsState();
+            });
+        }
+
+        function isImage(obj: FabricObject | null): boolean {
+            return obj !== null && obj.type === 'image';
+        }
+
+        function updateStyleButtonsState(): void {
+            const activeObj: FabricObject | null = canvas.getActiveObject();
+            if (!activeObj) {
+                boldBtn.classList.remove('active');
+                italicBtn.classList.remove('active');
+                underlineBtn.classList.remove('active');
+                alignLeftBtn.classList.remove('active');
+                alignCenterBtn.classList.remove('active');
+                alignRightBtn.classList.remove('active');
+                updateFontSizeCheckmark(null);
+                updateLineHeightCheckmark(null);
+                if (fillColorBtn) fillColorBtn.disabled = true;
+                if (bgColorBtn) bgColorBtn.disabled = true;
+                return;
+            }
+
+            const img: boolean = isImage(activeObj);
+
+            if (activeObj.type === 'textbox') {
+                const tb = activeObj as FabricTextbox;
+                boldBtn.classList.toggle('active', tb.fontWeight === 'bold');
+                italicBtn.classList.toggle('active', tb.fontStyle === 'italic');
+                underlineBtn.classList.toggle('active', !!tb.underline);
+                const align: string = tb.textAlign || 'left';
+                alignLeftBtn.classList.toggle('active', align === 'left');
+                alignCenterBtn.classList.toggle('active', align === 'center');
+                alignRightBtn.classList.toggle('active', align === 'right');
+                updateFontSizeCheckmark(tb.fontSize ?? null);
+                updateLineHeightCheckmark(tb.lineHeight ?? null);
+                if (fillColorBtn) fillColorBtn.disabled = false;
+                if (bgColorBtn) bgColorBtn.disabled = false;
+            } else {
+                boldBtn.classList.remove('active');
+                italicBtn.classList.remove('active');
+                underlineBtn.classList.remove('active');
+                alignLeftBtn.classList.remove('active');
+                alignCenterBtn.classList.remove('active');
+                alignRightBtn.classList.remove('active');
+                updateFontSizeCheckmark(null);
+                updateLineHeightCheckmark(null);
+                if (fillColorBtn) fillColorBtn.disabled = img;
+                if (bgColorBtn) bgColorBtn.disabled = true;
+            }
+        }
+
+        function updateFontSizeCheckmark(fontSize: number | null): void {
+            document.querySelectorAll('#fontSizeMenu .dropdown-item').forEach((item: Element) => {
+                const el = item as HTMLElement;
+                const check = el.querySelector('.check-icon') as HTMLElement;
+                if (check) {
+                    const ds = el.dataset['fontsize'];
+                    check.style.display = (fontSize !== null && ds && parseInt(ds) === fontSize)
+                        ? 'inline'
+                        : 'none';
                 }
             });
+        }
 
-            // Track changes
-            function markAsChanged() {
-                hasUnsavedChanges = true;
-            }
-
-            function saveHistoryState() {
-                if (!canvas) return;
-                const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
-                if (historyStack.length === 0 || historyStack[historyIndex] !== state) {
-                    historyStack = historyStack.slice(0, historyIndex + 1);
-                    historyStack.push(state);
-                    historyIndex++;
-                    markAsChanged();
+        function updateLineHeightCheckmark(lineHeight: number | null): void {
+            document.querySelectorAll('#lineHeightMenu .dropdown-item').forEach((item: Element) => {
+                const el = item as HTMLElement;
+                const check = el.querySelector('.check-icon') as HTMLElement;
+                if (check) {
+                    const ds = el.dataset['lineheight'];
+                    const val: number = ds ? parseFloat(ds) : 0;
+                    check.style.display = (lineHeight !== null && Math.abs(val - lineHeight) < 0.01)
+                        ? 'inline'
+                        : 'none';
                 }
-                updateUndoRedoButtons();
-            }
+            });
+        }
 
-            function scheduleHistorySave() {
-                if (historySaveTimer) clearTimeout(historySaveTimer);
-                historySaveTimer = setTimeout(saveHistoryState, 150);
-            }
-
-            function resetHistoryFromCurrentCanvas() {
-                historyStack = [];
-                historyIndex = -1;
-                const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
-                historyStack.push(state);
-                historyIndex = 0;
-                updateUndoRedoButtons();
-            }
-
-            function updateUndoRedoButtons() {
-                if (undoBtn) undoBtn.disabled = (historyIndex <= 0);
-                if (redoBtn) redoBtn.disabled = (historyIndex >= historyStack.length - 1);
-            }
-
-            function undo() {
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    loadHistoryState();
-                }
-            }
-
-            function redo() {
-                if (historyIndex < historyStack.length - 1) {
-                    historyIndex++;
-                    loadHistoryState();
-                }
-            }
-
-            function loadHistoryState() {
-                if (!canvas || historyStack.length === 0) return;
-                canvas.loadFromJSON(historyStack[historyIndex], () => {
-                    canvas.renderAll();
-                    updateUndoRedoButtons();
-                    updateStyleButtonsState();
+        // ---- Color Palette Builder ----
+        function buildColorPalette(
+            gridId: string,
+            customInputId: string,
+            callback: (color: string) => void
+        ): void {
+            const grid = document.getElementById(gridId) as HTMLDivElement;
+            if (!grid) return;
+            grid.innerHTML = '';
+            presetColors.forEach((color: string) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.addEventListener('click', (e: MouseEvent) => {
+                    e.stopPropagation();
+                    callback(color);
+                    const customInput = document.getElementById(customInputId) as HTMLInputElement;
+                    if (customInput) customInput.value = color;
+                    const popup = grid.closest('.color-picker-popup') as HTMLElement;
+                    if (popup) popup.classList.remove('show');
+                });
+                grid.appendChild(swatch);
+            });
+            const customInput = document.getElementById(customInputId) as HTMLInputElement;
+            if (customInput) {
+                customInput.addEventListener('input', (e: Event) => {
+                    callback((e.target as HTMLInputElement).value);
                 });
             }
+        }
 
-            function isImage(obj) {
-                return obj && obj.type === 'image';
-            }
+        // ---- Canvas Initialization ----
+        function initCanvas(): void {
+            const existingCanvas = document.getElementById('fabric-canvas');
+            if (existingCanvas) existingCanvas.remove();
+            const newCanvasElem = document.createElement('canvas');
+            newCanvasElem.id = 'fabric-canvas';
+            newCanvasElem.width = container.clientWidth || 900;
+            newCanvasElem.height = container.clientHeight || 600;
+            container.innerHTML = '';
+            container.appendChild(newCanvasElem);
+            canvas = new fabric.Canvas('fabric-canvas', {
+                preserveObjectStacking: true,
+                selection: true,
+                backgroundColor: '#2b2b2b'
+            }) as FabricCanvas;
+            canvas.setWidth(container.clientWidth);
+            canvas.setHeight(container.clientHeight);
+            canvas.renderAll();
 
-            function updateStyleButtonsState() {
-                const activeObj = canvas.getActiveObject();
-                if (!activeObj) {
-                    boldBtn.classList.remove('active');
-                    italicBtn.classList.remove('active');
-                    underlineBtn.classList.remove('active');
-                    alignLeftBtn.classList.remove('active');
-                    alignCenterBtn.classList.remove('active');
-                    alignRightBtn.classList.remove('active');
-                    updateFontSizeCheckmark(null);
-                    updateLineHeightCheckmark(null);
-                    if (fillColorBtn) fillColorBtn.disabled = true;
-                    if (bgColorBtn) bgColorBtn.disabled = true;
-                    return;
-                }
+            canvas.on('object:added', () => scheduleHistorySave());
+            canvas.on('object:modified', () => scheduleHistorySave());
+            canvas.on('object:removed', () => scheduleHistorySave());
+            canvas.on('selection:created', () => updateStyleButtonsState());
+            canvas.on('selection:updated', () => updateStyleButtonsState());
+            canvas.on('selection:cleared', () => {
+                boldBtn.classList.remove('active');
+                italicBtn.classList.remove('active');
+                underlineBtn.classList.remove('active');
+                alignLeftBtn.classList.remove('active');
+                alignCenterBtn.classList.remove('active');
+                alignRightBtn.classList.remove('active');
+                updateFontSizeCheckmark(null);
+                updateLineHeightCheckmark(null);
+                if (fillColorBtn) fillColorBtn.disabled = true;
+                if (bgColorBtn) bgColorBtn.disabled = true;
+            });
+        }
 
-                const img = isImage(activeObj);
+        initCanvas();
+        resetHistoryFromCurrentCanvas();
 
-                if (activeObj.type === 'textbox') {
-                    boldBtn.classList.toggle('active', activeObj.fontWeight === 'bold');
-                    italicBtn.classList.toggle('active', activeObj.fontStyle === 'italic');
-                    underlineBtn.classList.toggle('active', !!activeObj.underline);
-                    const align = activeObj.textAlign || 'left';
-                    alignLeftBtn.classList.toggle('active', align === 'left');
-                    alignCenterBtn.classList.toggle('active', align === 'center');
-                    alignRightBtn.classList.toggle('active', align === 'right');
-                    updateFontSizeCheckmark(activeObj.fontSize);
-                    updateLineHeightCheckmark(activeObj.lineHeight);
-                    if (fillColorBtn) fillColorBtn.disabled = false;
-                    if (bgColorBtn) bgColorBtn.disabled = false;
-                } else {
-                    boldBtn.classList.remove('active');
-                    italicBtn.classList.remove('active');
-                    underlineBtn.classList.remove('active');
-                    alignLeftBtn.classList.remove('active');
-                    alignCenterBtn.classList.remove('active');
-                    alignRightBtn.classList.remove('active');
-                    updateFontSizeCheckmark(null);
-                    updateLineHeightCheckmark(null);
-                    // 👇 FIX: disable Fill for ANY image (QR, uploaded, etc.)
-                    if (fillColorBtn) fillColorBtn.disabled = img;
-                    if (bgColorBtn) bgColorBtn.disabled = true;
-                }
-            }
-
-            function updateFontSizeCheckmark(fontSize) {
-                document.querySelectorAll('#fontSizeMenu .dropdown-item').forEach(item => {
-                    const check = item.querySelector('.check-icon');
-                    if (check) {
-                        check.style.display = (fontSize && parseInt(item.dataset.fontsize) === fontSize) ?
-                            'inline' : 'none';
-                    }
-                });
-            }
-
-            function updateLineHeightCheckmark(lineHeight) {
-                document.querySelectorAll('#lineHeightMenu .dropdown-item').forEach(item => {
-                    const check = item.querySelector('.check-icon');
-                    if (check) {
-                        const val = parseFloat(item.dataset.lineheight);
-                        check.style.display = (lineHeight && Math.abs(val - lineHeight) < 0.01) ?
-                            'inline' : 'none';
-                    }
-                });
-            }
-
-            const presetColors = [
-                '#ffffff', '#000000', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
-                '#1abc9c', '#3498db', '#9b59b6', '#ecf0f1', '#c0392b', '#2980b9',
-                '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#f39c12', '#d35400',
-                '#7f8c8d', '#bdc3c7', '#34495e', '#95a5a6'
-            ];
-
-            function buildColorPalette(gridId, customInputId, callback) {
-                const grid = document.getElementById(gridId);
-                grid.innerHTML = '';
-                presetColors.forEach(color => {
-                    const swatch = document.createElement('div');
-                    swatch.className = 'color-swatch';
-                    swatch.style.backgroundColor = color;
-                    swatch.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        callback(color);
-                        const customInput = document.getElementById(customInputId);
-                        if (customInput) customInput.value = color;
-                        const popup = grid.closest('.color-picker-popup');
-                        if (popup) popup.classList.remove('show');
-                    });
-                    grid.appendChild(swatch);
-                });
-                const customInput = document.getElementById(customInputId);
-                if (customInput) {
-                    customInput.addEventListener('input', (e) => {
-                        callback(e.target.value);
-                    });
-                }
-            }
-
-            function initCanvas() {
-                const existingCanvas = document.getElementById('fabric-canvas');
-                if (existingCanvas) existingCanvas.remove();
-                const newCanvasElem = document.createElement('canvas');
-                newCanvasElem.id = 'fabric-canvas';
-                newCanvasElem.width = container.clientWidth || 900;
-                newCanvasElem.height = container.clientHeight || 600;
-                container.innerHTML = '';
-                container.appendChild(newCanvasElem);
-                canvas = new fabric.Canvas('fabric-canvas', {
-                    preserveObjectStacking: true,
-                    selection: true,
-                    backgroundColor: '#2b2b2b'
-                });
+        window.addEventListener('resize', () => {
+            if (canvas) {
                 canvas.setWidth(container.clientWidth);
                 canvas.setHeight(container.clientHeight);
                 canvas.renderAll();
-                canvas.on('object:added', () => scheduleHistorySave());
-                canvas.on('object:modified', () => scheduleHistorySave());
-                canvas.on('object:removed', () => scheduleHistorySave());
-                canvas.on('selection:created', () => updateStyleButtonsState());
-                canvas.on('selection:updated', () => updateStyleButtonsState());
-                canvas.on('selection:cleared', () => {
-                    boldBtn.classList.remove('active');
-                    italicBtn.classList.remove('active');
-                    underlineBtn.classList.remove('active');
-                    alignLeftBtn.classList.remove('active');
-                    alignCenterBtn.classList.remove('active');
-                    alignRightBtn.classList.remove('active');
-                    updateFontSizeCheckmark(null);
-                    updateLineHeightCheckmark(null);
-                    if (fillColorBtn) fillColorBtn.disabled = true;
-                    if (bgColorBtn) bgColorBtn.disabled = true;
-                });
             }
-            initCanvas();
+        });
+
+        // ---- Actions ----
+        function newCanvasAction(): void {
+            if (!canvas) return;
+            if (hasUnsavedChanges) {
+                if (!confirm('You have unsaved changes. Are you sure you want to create a new canvas?')) {
+                    return;
+                }
+            }
+            canvas.clear();
+            canvas.backgroundColor = '#2b2b2b';
+            canvas.setBackgroundColor('#2b2b2b');
+            zoomLevel = 1;
+            canvas.setZoom(1);
+            canvas.renderAll();
             resetHistoryFromCurrentCanvas();
+            updateZoomDisplay();
+            hasUnsavedChanges = false;
+        }
 
-            window.addEventListener('resize', () => {
-                if (canvas) {
-                    canvas.setWidth(container.clientWidth);
-                    canvas.setHeight(container.clientHeight);
-                    canvas.renderAll();
-                }
-            });
+        function addTextBox(): void {
+            const textbox = new fabric.Textbox('New Text', {
+                left: 100,
+                top: 100,
+                width: 200,
+                fontSize: 24,
+                fill: '#ffffff',
+                fontFamily: 'Segoe UI',
+                hasControls: true,
+                hasBorders: true
+            }) as FabricTextbox;
+            canvas.add(textbox);
+            canvas.setActiveObject(textbox);
+            canvas.renderAll();
+            scheduleHistorySave();
+        }
 
-            function newCanvas() {
-                if (!canvas) return;
-                if (hasUnsavedChanges) {
-                    if (!confirm('You have unsaved changes. Are you sure you want to create a new canvas?')) {
-                        return;
+        function addRectangle(): void {
+            const rect = new fabric.Rect({
+                left: 150,
+                top: 150,
+                width: 120,
+                height: 80,
+                fill: '#3498db',
+                stroke: '#ffffff',
+                strokeWidth: 2
+            }) as FabricRect;
+            canvas.add(rect);
+            canvas.setActiveObject(rect);
+            canvas.renderAll();
+            scheduleHistorySave();
+        }
+
+        function addCircle(): void {
+            const circle = new fabric.Circle({
+                left: 200,
+                top: 200,
+                radius: 50,
+                fill: '#e67e22',
+                stroke: '#fff',
+                strokeWidth: 2
+            }) as FabricCircle;
+            canvas.add(circle);
+            canvas.setActiveObject(circle);
+            canvas.renderAll();
+            scheduleHistorySave();
+        }
+
+        function addImageFromFile(): void {
+            imageFileInput.click();
+        }
+
+        function addQRCode(): void {
+            const text: string | null = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
+            if (!text || !text.trim()) return;
+            const qrUrl: string =
+                `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text.trim())}`;
+            fabric.Image.fromURL(qrUrl, (img: FabricImage) => {
+                img.set({
+                    left: (canvas.width - img.width * (img.scaleX ?? 1)) / 2,
+                    top: (canvas.height - img.height * (img.scaleY ?? 1)) / 2
+                });
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.renderAll();
+                scheduleHistorySave();
+            }, { crossOrigin: 'anonymous' });
+        }
+
+        function handleImageFileSelect(event: Event): void {
+            const target = event.target as HTMLInputElement;
+            const file: File | null = target.files ? target.files[0] : null;
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (e: ProgressEvent<FileReader>): void {
+                const result = e.target?.result;
+                if (typeof result !== 'string') return;
+                fabric.Image.fromURL(result, (img: FabricImage) => {
+                    const maxWidth: number = canvas.width * 0.6;
+                    const maxHeight: number = canvas.height * 0.6;
+                    if (img.width > maxWidth || img.height > maxHeight) {
+                        const scale: number = Math.min(maxWidth / img.width, maxHeight / img.height);
+                        img.scale(scale);
+                    } else {
+                        img.scale(1);
                     }
-                }
-                canvas.clear();
-                canvas.backgroundColor = '#2b2b2b';
-                zoomLevel = 1;
-                canvas.setZoom(1);
-                canvas.renderAll();
-                resetHistoryFromCurrentCanvas();
-                updateZoomDisplay();
-                hasUnsavedChanges = false;
-            }
-
-            function addTextBox() {
-                const textbox = new fabric.Textbox('New Text', {
-                    left: 100,
-                    top: 100,
-                    width: 200,
-                    fontSize: 24,
-                    fill: '#ffffff',
-                    fontFamily: 'Segoe UI',
-                    hasControls: true,
-                    hasBorders: true
-                });
-                canvas.add(textbox);
-                canvas.setActiveObject(textbox);
-                canvas.renderAll();
-                scheduleHistorySave();
-            }
-
-            function addRectangle() {
-                const rect = new fabric.Rect({
-                    left: 150,
-                    top: 150,
-                    width: 120,
-                    height: 80,
-                    fill: '#3498db',
-                    stroke: '#ffffff',
-                    strokeWidth: 2
-                });
-                canvas.add(rect);
-                canvas.setActiveObject(rect);
-                canvas.renderAll();
-                scheduleHistorySave();
-            }
-
-            function addCircle() {
-                const circle = new fabric.Circle({
-                    left: 200,
-                    top: 200,
-                    radius: 50,
-                    fill: '#e67e22',
-                    stroke: '#fff',
-                    strokeWidth: 2
-                });
-                canvas.add(circle);
-                canvas.setActiveObject(circle);
-                canvas.renderAll();
-                scheduleHistorySave();
-            }
-
-            function addImageFromFile() {
-                document.getElementById('imageFileInput').click();
-            }
-
-            function addQRCode() {
-                const text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
-                if (!text || !text.trim()) return;
-                const qrUrl =
-                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text.trim())}`;
-                fabric.Image.fromURL(qrUrl, (img) => {
                     img.set({
-                        left: (canvas.width - img.width * img.scaleX) / 2,
-                        top: (canvas.height - img.height * img.scaleY) / 2
+                        left: (canvas.width - img.width * (img.scaleX ?? 1)) / 2,
+                        top: (canvas.height - img.height * (img.scaleY ?? 1)) / 2
                     });
                     canvas.add(img);
                     canvas.setActiveObject(img);
                     canvas.renderAll();
                     scheduleHistorySave();
                 }, { crossOrigin: 'anonymous' });
-            }
-
-            function handleImageFileSelect(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                if (!file.type.startsWith('image/')) {
-                    alert('Please select a valid image file.');
-                    event.target.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    fabric.Image.fromURL(e.target.result, (img) => {
-                        const maxWidth = canvas.width * 0.6;
-                        const maxHeight = canvas.height * 0.6;
-                        if (img.width > maxWidth || img.height > maxHeight) {
-                            const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-                            img.scale(scale);
-                        } else {
-                            img.scale(1);
-                        }
-                        img.set({
-                            left: (canvas.width - img.width * img.scaleX) / 2,
-                            top: (canvas.height - img.height * img.scaleY) / 2
-                        });
-                        canvas.add(img);
-                        canvas.setActiveObject(img);
-                        canvas.renderAll();
-                        scheduleHistorySave();
-                    }, { crossOrigin: 'anonymous' });
-                };
-                reader.onerror = () => alert('Failed to load image file.');
-                reader.readAsDataURL(file);
-                event.target.value = '';
-            }
-
-            function deleteSelected() {
-                const active = canvas.getActiveObjects();
-                if (active.length) {
-                    active.forEach(obj => canvas.remove(obj));
-                    canvas.discardActiveObject();
-                    canvas.renderAll();
-                    scheduleHistorySave();
-                }
-            }
-
-            function bringForward() {
-                const obj = canvas.getActiveObject();
-                if (obj) {
-                    canvas.bringForward(obj);
-                    canvas.renderAll();
-                    scheduleHistorySave();
-                }
-            }
-
-            function sendBackward() {
-                const obj = canvas.getActiveObject();
-                if (obj) {
-                    canvas.sendBackwards(obj);
-                    canvas.renderAll();
-                    scheduleHistorySave();
-                }
-            }
-
-            function applyToSelected(callback) {
-                const actives = canvas.getActiveObjects();
-                if (actives.length) {
-                    actives.forEach(obj => callback(obj));
-                    canvas.renderAll();
-                    scheduleHistorySave();
-                    updateStyleButtonsState();
-                }
-            }
-
-            function setBold() {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        obj.fontWeight = (obj.fontWeight === 'bold') ? 'normal' : 'bold';
-                    }
-                });
-            }
-
-            function setItalic() {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        obj.fontStyle = (obj.fontStyle === 'italic') ? 'normal' : 'italic';
-                    }
-                });
-            }
-
-            function setUnderline() {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        obj.underline = !obj.underline;
-                    }
-                });
-            }
-
-            function setFontSize(size) {
-                applyToSelected(obj => {
-                    if (obj.fontSize !== undefined) obj.fontSize = parseInt(size);
-                });
-                document.getElementById('fontSizeContainer').classList.remove('open');
-            }
-
-            function setLineHeight(height) {
-                applyToSelected(obj => {
-                    if (obj.lineHeight !== undefined) obj.lineHeight = parseFloat(height);
-                });
-                document.getElementById('lineHeightContainer').classList.remove('open');
-            }
-
-            function setFillColor(color) {
-                applyToSelected(obj => {
-                    // 👇 FIX: skip fill for any image (QR or uploaded)
-                    if (obj.type !== 'image') {
-                        obj.set('fill', color);
-                    }
-                });
-            }
-
-            function setBackgroundColor(color) {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        obj.set('backgroundColor', color);
-                    }
-                });
-            }
-
-            function setTextAlign(align) {
-                applyToSelected(obj => {
-                    if (obj.textAlign !== undefined) obj.textAlign = align;
-                });
-            }
-
-            function setCanvasBgColor(color) {
-                canvas.setBackgroundColor(color, () => canvas.renderAll());
-                markAsChanged();
-            }
-
-            function increaseIndent() {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        obj.text = '    ' + obj.text;
-                    }
-                });
-            }
-
-            function decreaseIndent() {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        const trimmed = obj.text.replace(/^ {1,4}/, '');
-                        obj.text = trimmed;
-                    }
-                });
-            }
-
-            function transformText(type) {
-                applyToSelected(obj => {
-                    if (obj.type === 'textbox') {
-                        switch (type) {
-                            case 'uppercase':
-                                obj.text = obj.text.toUpperCase();
-                                break;
-                            case 'lowercase':
-                                obj.text = obj.text.toLowerCase();
-                                break;
-                            case 'capitalize':
-                                obj.text = obj.text.replace(/\b\w/g, c => c.toUpperCase());
-                                break;
-                        }
-                    }
-                });
-                document.getElementById('textTransformContainer').classList.remove('open');
-            }
-
-            function updateZoomDisplay() {
-                zoomLevelDisplay.textContent = Math.round(zoomLevel * 100) + '%';
-            }
-
-            function zoomIn() {
-                zoomLevel = Math.min(2, zoomLevel + 0.1);
-                canvas.setZoom(zoomLevel);
-                canvas.renderAll();
-                updateZoomDisplay();
-            }
-
-            function zoomOut() {
-                zoomLevel = Math.max(0.5, zoomLevel - 0.1);
-                canvas.setZoom(zoomLevel);
-                canvas.renderAll();
-                updateZoomDisplay();
-            }
-
-            function exportAsREDC() {
-                // .REDC = pure JSON with .redc extension
-                const dataStr = JSON.stringify(canvas.toJSON(['id']), null, 2);
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'canvas.redc';
-                a.click();
-                URL.revokeObjectURL(url);
-                hasUnsavedChanges = false;
-            }
-
-            function importJSON(file) {
-                if (hasUnsavedChanges) {
-                    if (!confirm('Importing will replace the current canvas content. Are you sure?')) return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const json = JSON.parse(e.target.result);
-                        canvas.loadFromJSON(json, () => {
-                            canvas.renderAll();
-                            resetHistoryFromCurrentCanvas();
-                            updateZoomDisplay();
-                            hasUnsavedChanges = false;
-                        });
-                    } catch (err) {
-                        alert('Invalid JSON file. Cannot import.');
-                    }
-                };
-                reader.onerror = () => alert('Error reading file.');
-                reader.readAsText(file);
-            }
-
-            const actionsMap = {
-                newDoc: newCanvas,
-                undo,
-                redo,
-                deleteSelected,
-                addText: addTextBox,
-                addImage: addImageFromFile,
-                addRectangle,
-                addCircle,
-                addQR: addQRCode,
-                bold: setBold,
-                italic: setItalic,
-                underline: setUnderline,
-                alignLeft: () => setTextAlign('left'),
-                alignCenter: () => setTextAlign('center'),
-                alignRight: () => setTextAlign('right'),
-                bringForward,
-                sendBackward,
-                zoomIn,
-                zoomOut,
-                focusMode: () => document.body.classList.toggle('focus-mode'),
-                exportRedc: exportAsREDC,
-                indentInc: increaseIndent,
-                indentDec: decreaseIndent
             };
+            reader.onerror = () => alert('Failed to load image file.');
+            reader.readAsDataURL(file);
+            target.value = '';
+        }
 
-            document.getElementById('toolbar').addEventListener('click', (e) => {
-                const btn = e.target.closest('.tool-btn');
-                if (!btn || btn.closest('.dropdown-container')) return;
-                const action = btn.dataset.action;
-                if (action && actionsMap[action]) actionsMap[action]();
+        function deleteSelected(): void {
+            const active: FabricObject[] = canvas.getActiveObjects();
+            if (active.length) {
+                active.forEach((obj: FabricObject) => canvas.remove(obj));
+                canvas.discardActiveObject();
+                canvas.renderAll();
+                scheduleHistorySave();
+            }
+        }
+
+        function bringForward(): void {
+            const obj: FabricObject | null = canvas.getActiveObject();
+            if (obj) {
+                canvas.bringForward(obj);
+                canvas.renderAll();
+                scheduleHistorySave();
+            }
+        }
+
+        function sendBackward(): void {
+            const obj: FabricObject | null = canvas.getActiveObject();
+            if (obj) {
+                canvas.sendBackwards(obj);
+                canvas.renderAll();
+                scheduleHistorySave();
+            }
+        }
+
+        function applyToSelected(callback: (obj: FabricObject) => void): void {
+            const actives: FabricObject[] = canvas.getActiveObjects();
+            if (actives.length) {
+                actives.forEach((obj: FabricObject) => callback(obj));
+                canvas.renderAll();
+                scheduleHistorySave();
+                updateStyleButtonsState();
+            }
+        }
+
+        function setBold(): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox') {
+                    obj.fontWeight = (obj.fontWeight === 'bold') ? 'normal' : 'bold';
+                }
             });
+        }
 
-            document.getElementById('imageFileInput').addEventListener('change', handleImageFileSelect);
+        function setItalic(): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox') {
+                    obj.fontStyle = (obj.fontStyle === 'italic') ? 'normal' : 'italic';
+                }
+            });
+        }
 
-            document.querySelectorAll('[data-fontsize]').forEach(el => {
-                el.addEventListener('click', () => {
-                    setFontSize(el.dataset.fontsize);
-                    updateFontSizeCheckmark(parseInt(el.dataset.fontsize));
+        function setUnderline(): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox') {
+                    obj.underline = !obj.underline;
+                }
+            });
+        }
+
+        function setFontSize(size: string): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.fontSize !== undefined) obj.fontSize = parseInt(size);
+            });
+            const container = document.getElementById('fontSizeContainer') as HTMLElement;
+            if (container) container.classList.remove('open');
+        }
+
+        function setLineHeight(height: string): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.lineHeight !== undefined) obj.lineHeight = parseFloat(height);
+            });
+            const container = document.getElementById('lineHeightContainer') as HTMLElement;
+            if (container) container.classList.remove('open');
+        }
+
+        function setFillColor(color: string): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type !== 'image') {
+                    obj.set('fill', color);
+                }
+            });
+        }
+
+        function setBackgroundColor(color: string): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox') {
+                    obj.set('backgroundColor', color);
+                }
+            });
+        }
+
+        function setTextAlign(align: string): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.textAlign !== undefined) obj.textAlign = align;
+            });
+        }
+
+        function setCanvasBgColor(color: string): void {
+            canvas.setBackgroundColor(color, () => canvas.renderAll());
+            markAsChanged();
+        }
+
+        function increaseIndent(): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox' && obj.text !== undefined) {
+                    obj.text = '    ' + obj.text;
+                }
+            });
+        }
+
+        function decreaseIndent(): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox' && obj.text !== undefined) {
+                    const trimmed: string = obj.text.replace(/^ {1,4}/, '');
+                    obj.text = trimmed;
+                }
+            });
+        }
+
+        function transformText(type: string): void {
+            applyToSelected((obj: FabricObject) => {
+                if (obj.type === 'textbox' && obj.text !== undefined) {
+                    switch (type) {
+                        case 'uppercase':
+                            obj.text = obj.text.toUpperCase();
+                            break;
+                        case 'lowercase':
+                            obj.text = obj.text.toLowerCase();
+                            break;
+                        case 'capitalize':
+                            obj.text = obj.text.replace(/\b\w/g, (c: string) => c.toUpperCase());
+                            break;
+                    }
+                }
+            });
+            const container = document.getElementById('textTransformContainer') as HTMLElement;
+            if (container) container.classList.remove('open');
+        }
+
+        function updateZoomDisplay(): void {
+            zoomLevelDisplay.textContent = Math.round(zoomLevel * 100) + '%';
+        }
+
+        function zoomIn(): void {
+            zoomLevel = Math.min(2, zoomLevel + 0.1);
+            canvas.setZoom(zoomLevel);
+            canvas.renderAll();
+            updateZoomDisplay();
+        }
+
+        function zoomOut(): void {
+            zoomLevel = Math.max(0.5, zoomLevel - 0.1);
+            canvas.setZoom(zoomLevel);
+            canvas.renderAll();
+            updateZoomDisplay();
+        }
+
+        function exportAsREDC(): void {
+            const dataStr: string = JSON.stringify(canvas.toJSON(['id']), null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url: string = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'canvas.redc';
+            a.click();
+            URL.revokeObjectURL(url);
+            hasUnsavedChanges = false;
+        }
+
+        function importJSON(file: File): void {
+            if (hasUnsavedChanges) {
+                if (!confirm('Importing will replace the current canvas content. Are you sure?')) return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                try {
+                    const result = e.target?.result;
+                    if (typeof result !== 'string') return;
+                    const json = JSON.parse(result);
+                    canvas.loadFromJSON(json, () => {
+                        canvas.renderAll();
+                        resetHistoryFromCurrentCanvas();
+                        updateZoomDisplay();
+                        hasUnsavedChanges = false;
+                    });
+                } catch (err) {
+                    alert('Invalid JSON file. Cannot import.');
+                }
+            };
+            reader.onerror = () => alert('Error reading file.');
+            reader.readAsText(file);
+        }
+
+        // ---- Action Map ----
+        interface ActionMap {
+            [key: string]: () => void;
+        }
+
+        const actionsMap: ActionMap = {
+            newDoc: newCanvasAction,
+            undo,
+            redo,
+            deleteSelected,
+            addText: addTextBox,
+            addImage: addImageFromFile,
+            addRectangle,
+            addCircle,
+            addQR: addQRCode,
+            bold: setBold,
+            italic: setItalic,
+            underline: setUnderline,
+            alignLeft: () => setTextAlign('left'),
+            alignCenter: () => setTextAlign('center'),
+            alignRight: () => setTextAlign('right'),
+            bringForward,
+            sendBackward,
+            zoomIn,
+            zoomOut,
+            focusMode: () => document.body.classList.toggle('focus-mode'),
+            exportRedc: exportAsREDC,
+            indentInc: increaseIndent,
+            indentDec: decreaseIndent
+        };
+
+        // ---- Event Listeners ----
+        toolbar.addEventListener('click', (e: MouseEvent) => {
+            const btn = (e.target as HTMLElement).closest('.tool-btn') as HTMLElement | null;
+            if (!btn || btn.closest('.dropdown-container')) return;
+            const action: string | undefined = btn.dataset['action'];
+            if (action && actionsMap[action]) actionsMap[action]();
+        });
+
+        imageFileInput.addEventListener('change', handleImageFileSelect);
+
+        document.querySelectorAll('[data-fontsize]').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.addEventListener('click', () => {
+                const size = htmlEl.dataset['fontsize'];
+                if (size) {
+                    setFontSize(size);
+                    updateFontSizeCheckmark(parseInt(size));
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-lineheight]').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.addEventListener('click', () => {
+                const h = htmlEl.dataset['lineheight'];
+                if (h) {
+                    setLineHeight(h);
+                    updateLineHeightCheckmark(parseFloat(h));
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-transform]').forEach((el: Element) => {
+            const htmlEl = el as HTMLElement;
+            htmlEl.addEventListener('click', () => {
+                const t = htmlEl.dataset['transform'];
+                if (t) transformText(t);
+            });
+        });
+
+        buildColorPalette('fillColorGrid', 'fillColorCustom', setFillColor);
+        buildColorPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
+        buildColorPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
+
+        function setupColorDropdown(containerId: string, pickerId: string): void {
+            const cont = document.getElementById(containerId) as HTMLElement;
+            const picker = document.getElementById(pickerId) as HTMLElement;
+            const btn = cont.querySelector('.tool-btn') as HTMLButtonElement;
+            btn.addEventListener('click', (e: MouseEvent) => {
+                e.stopPropagation();
+                document.querySelectorAll('.color-picker-popup.show').forEach((p: Element) => {
+                    if (p !== picker) p.classList.remove('show');
                 });
-            });
-
-            document.querySelectorAll('[data-lineheight]').forEach(el => {
-                el.addEventListener('click', () => {
-                    setLineHeight(el.dataset.lineheight);
-                    updateLineHeightCheckmark(parseFloat(el.dataset.lineheight));
+                document.querySelectorAll('.dropdown-container.open').forEach((d: Element) => {
+                    if (d !== cont) d.classList.remove('open');
                 });
+                picker.classList.toggle('show');
             });
+            picker.addEventListener('click', (e: MouseEvent) => e.stopPropagation());
+        }
 
-            document.querySelectorAll('[data-transform]').forEach(el => {
-                el.addEventListener('click', () => transformText(el.dataset.transform));
-            });
+        setupColorDropdown('fillColorContainer', 'fillColorPicker');
+        setupColorDropdown('bgColorContainer', 'bgColorPicker');
+        setupColorDropdown('canvasBgContainer', 'canvasBgPicker');
 
-            buildColorPalette('fillColorGrid', 'fillColorCustom', setFillColor);
-            buildColorPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
-            buildColorPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
-
-            function setupColorDropdown(containerId, pickerId) {
-                const container = document.getElementById(containerId);
-                const picker = document.getElementById(pickerId);
-                const btn = container.querySelector('.tool-btn');
-                btn.addEventListener('click', (e) => {
+        document.querySelectorAll(
+            '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
+        ).forEach((cont: Element) => {
+            const htmlCont = cont as HTMLElement;
+            const btn = htmlCont.querySelector('.tool-btn') as HTMLButtonElement | null;
+            if (btn) {
+                btn.addEventListener('click', (e: MouseEvent) => {
                     e.stopPropagation();
-                    document.querySelectorAll('.color-picker-popup.show').forEach(p => {
-                        if (p !== picker) p.classList.remove('show');
-                    });
-                    document.querySelectorAll('.dropdown-container.open').forEach(d => {
-                        if (d !== container) d.classList.remove('open');
-                    });
-                    picker.classList.toggle('show');
+                    document.querySelectorAll('.color-picker-popup.show').forEach((p: Element) =>
+                        p.classList.remove('show'));
+                    htmlCont.classList.toggle('open');
                 });
-                picker.addEventListener('click', (e) => e.stopPropagation());
+            }
+            htmlCont.addEventListener('click', (e: MouseEvent) => e.stopPropagation());
+        });
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-container.open').forEach((c: Element) =>
+                c.classList.remove('open'));
+            document.querySelectorAll('.color-picker-popup.show').forEach((p: Element) =>
+                p.classList.remove('show'));
+        });
+
+        importJsonBtn.addEventListener('click', () => {
+            importFileInput.click();
+        });
+
+        importFileInput.addEventListener('change', (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            if (target.files && target.files[0]) {
+                importJSON(target.files[0]);
+                target.value = '';
+            }
+        });
+
+        exitFocusBtn.addEventListener('click', () => document.body.classList.remove('focus-mode'));
+
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
+                document.body.classList.remove('focus-mode');
+            }
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+            if (e.key === 'Delete' && !e.ctrlKey && !e.altKey && document.activeElement === document.body) {
+                e.preventDefault();
+                deleteSelected();
+            }
+        });
+
+        updateZoomDisplay();
+        updateUndoRedoButtons();
+        if (fillColorBtn) fillColorBtn.disabled = true;
+        if (bgColorBtn) bgColorBtn.disabled = true;
+
+        // Log ready state
+        console.log('%c[ReStudio Documents] %cTypeScript + Tabler Icons initialized successfully.',
+            'color: #4ec9ff; font-weight: bold;', 'color: #ccc;');
+    </script>
+
+    <!-- Bootstrap: Compile TypeScript to JavaScript at runtime -->
+    <script>
+        (function() {
+            const tsSourceEl = document.getElementById('ts-source');
+            if (!tsSourceEl) {
+                console.error('TypeScript source element not found.');
+                return;
+            }
+            const tsCode = tsSourceEl.textContent || '';
+            if (!tsCode.trim()) {
+                console.error('TypeScript source is empty.');
+                return;
             }
 
-            setupColorDropdown('fillColorContainer', 'fillColorPicker');
-            setupColorDropdown('bgColorContainer', 'bgColorPicker');
-            setupColorDropdown('canvasBgContainer', 'canvasBgPicker');
+            // Check if TypeScript compiler is loaded
+            if (typeof window.ts === 'undefined') {
+                console.error(
+                    'TypeScript compiler not loaded. The TS compiler CDN may be unavailable. Please ensure internet connectivity.'
+                    );
+                return;
+            }
 
-            document.querySelectorAll(
-                    '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
-                )
-                .forEach(cont => {
-                    const btn = cont.querySelector('.tool-btn');
-                    if (btn) {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            document.querySelectorAll('.color-picker-popup.show').forEach(p => p
-                                .classList.remove('show'));
-                            cont.classList.toggle('open');
-                        });
+            try {
+                const result = window.ts.transpileModule(tsCode, {
+                    compilerOptions: {
+                        module: 0, // None - no module wrapper, runs in global scope
+                        target: 9, // ES2020
+                        lib: ['dom', 'es2020'],
+                        strict: true,
+                        removeComments: false,
+                        isolatedModules: true,
                     }
-                    cont.addEventListener('click', (e) => e.stopPropagation());
                 });
 
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.dropdown-container.open').forEach(c => c.classList.remove('open'));
-                document.querySelectorAll('.color-picker-popup.show').forEach(p => p.classList.remove('show'));
-            });
+                // Execute the compiled JavaScript
+                const compiledJS = result.outputText;
+                const scriptTag = document.createElement('script');
+                scriptTag.textContent = compiledJS;
+                document.body.appendChild(scriptTag);
 
-            document.getElementById('importJsonBtn').addEventListener('click', () => {
-                document.getElementById('importFileInput').click();
-            });
-
-            document.getElementById('importFileInput').addEventListener('change', (e) => {
-                if (e.target.files[0]) {
-                    importJSON(e.target.files[0]);
-                    e.target.value = '';
-                }
-            });
-
-            document.getElementById('exitFocusBtn').addEventListener('click', () => document.body.classList.remove(
-                'focus-mode'));
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
-                    document.body.classList.remove('focus-mode');
-                }
-                if (e.ctrlKey && e.key === 'z') {
-                    e.preventDefault();
-                    undo();
-                }
-                if (e.ctrlKey && e.key === 'y') {
-                    e.preventDefault();
-                    redo();
-                }
-                if (e.key === 'Delete' && !e.ctrlKey && !e.altKey && document.activeElement === document.body) {
-                    e.preventDefault();
-                    deleteSelected();
-                }
-            });
-
-            updateZoomDisplay();
-            updateUndoRedoButtons();
-            if (fillColorBtn) fillColorBtn.disabled = true;
-            if (bgColorBtn) bgColorBtn.disabled = true;
+                console.log('%c[TS Compiler] %cTypeScript compiled and executed successfully.',
+                    'color: #2ecc71; font-weight: bold;', 'color: #ccc;');
+            } catch (err) {
+                console.error('TypeScript compilation failed:', err);
+                console.error('TS Source preview:', tsCode.substring(0, 500) + '...');
+            }
         })();
     </script>
 </body>
