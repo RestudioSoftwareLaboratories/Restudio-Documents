@@ -103,7 +103,7 @@ body.focus-mode .exit-focus-btn {
 .tool-btn:hover {
     background: #3c3c3c;
 }
-.tool-btn .material-icons {
+.tool-btn .ti {
     font-size: 18px;
 }
 .tool-btn.active {
