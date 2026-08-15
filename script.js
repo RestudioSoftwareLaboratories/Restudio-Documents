@@ -47,7 +47,7 @@ function validateREDCFile(data) {
     const jsonString = JSON.stringify(data);
     const sizeInMB = new Blob([jsonString]).size / (1024 * 1024);
     if (sizeInMB > MAX_FILE_SIZE_MB) {
-        throw new Error(`File too large: ${sizeInMB.toFixed(2)}MB (max ${MAX_FILE_SIZE_MB}MB)`);
+        throw new Error('File too large: ' + sizeInMB.toFixed(2) + 'MB (max ' + MAX_FILE_SIZE_MB + 'MB)');
     }
     
     // التحقق من وجود objects ونسقها
@@ -57,20 +57,20 @@ function validateREDCFile(data) {
     
     // التحقق من صحة كل object
     if (data.objects) {
-        for (let i = 0; i < data.objects.length; i++) {
-            const obj = data.objects[i];
+        for (var i = 0; i < data.objects.length; i++) {
+            var obj = data.objects[i];
             if (!obj || typeof obj !== 'object') {
-                throw new Error(`Invalid object at index ${i}`);
+                throw new Error('Invalid object at index ' + i);
             }
             // التحقق من type مسموح به
-            const allowedTypes = ['textbox', 'rect', 'circle', 'image', 'group'];
-            if (obj.type && !allowedTypes.includes(obj.type)) {
-                throw new Error(`Invalid object type: ${obj.type}`);
+            var allowedTypes = ['textbox', 'rect', 'circle', 'image', 'group'];
+            if (obj.type && allowedTypes.indexOf(obj.type) === -1) {
+                throw new Error('Invalid object type: ' + obj.type);
             }
             // تطهير النصوص في الملف المستورد
             if (obj.type === 'textbox' && obj.text) {
                 if (!isValidText(obj.text)) {
-                    throw new Error(`Suspicious content detected in text object`);
+                    throw new Error('Suspicious content detected in text object');
                 }
                 obj.text = sanitizeText(obj.text);
             }
@@ -102,25 +102,25 @@ function getActiveObjectsSafe() {
 // ========== MAIN APPLICATION ==========
 
 (function() {
-    const container = document.getElementById('fabric-canvas-container');
-    const zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
-    const undoBtn = document.querySelector('[data-action="undo"]');
-    const redoBtn = document.querySelector('[data-action="redo"]');
-    const boldBtn = document.querySelector('[data-action="bold"]');
-    const italicBtn = document.querySelector('[data-action="italic"]');
-    const underlineBtn = document.querySelector('[data-action="underline"]');
-    const alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
-    const alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
-    const alignRightBtn = document.querySelector('[data-action="alignRight"]');
-    const fillColorBtn = document.getElementById('fillColorBtn');
-    const bgColorBtn = document.getElementById('bgColorBtn');
+    var container = document.getElementById('fabric-canvas-container');
+    var zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
+    var undoBtn = document.querySelector('[data-action="undo"]');
+    var redoBtn = document.querySelector('[data-action="redo"]');
+    var boldBtn = document.querySelector('[data-action="bold"]');
+    var italicBtn = document.querySelector('[data-action="italic"]');
+    var underlineBtn = document.querySelector('[data-action="underline"]');
+    var alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
+    var alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
+    var alignRightBtn = document.querySelector('[data-action="alignRight"]');
+    var fillColorBtn = document.getElementById('fillColorBtn');
+    var bgColorBtn = document.getElementById('bgColorBtn');
 
-    let canvas;
-    let historyStack = [],
-        historyIndex = -1;
-    let zoomLevel = 1;
-    let historySaveTimer = null;
-    let hasUnsavedChanges = false;
+    var canvas;
+    var historyStack = [];
+    var historyIndex = -1;
+    var zoomLevel = 1;
+    var historySaveTimer = null;
+    var hasUnsavedChanges = false;
 
     // ============ Refresh Warning ============
     window.addEventListener('beforeunload', function(e) {
@@ -139,7 +139,7 @@ function getActiveObjectsSafe() {
     function saveHistoryState() {
         if (!canvas) return;
         try {
-            const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
+            var state = JSON.stringify(canvas.toJSON(['id', 'customType']));
             if (historyStack.length === 0 || historyStack[historyIndex] !== state) {
                 historyStack = historyStack.slice(0, historyIndex + 1);
                 historyStack.push(state);
@@ -162,7 +162,7 @@ function getActiveObjectsSafe() {
         try {
             historyStack = [];
             historyIndex = -1;
-            const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
+            var state = JSON.stringify(canvas.toJSON(['id', 'customType']));
             historyStack.push(state);
             historyIndex = 0;
             updateUndoRedoButtons();
@@ -193,7 +193,7 @@ function getActiveObjectsSafe() {
     function loadHistoryState() {
         if (!canvas || historyStack.length === 0) return;
         try {
-            canvas.loadFromJSON(historyStack[historyIndex], () => {
+            canvas.loadFromJSON(historyStack[historyIndex], function() {
                 canvas.renderAll();
                 updateUndoRedoButtons();
                 updateStyleButtonsState();
@@ -208,7 +208,7 @@ function getActiveObjectsSafe() {
     }
 
     function updateStyleButtonsState() {
-        const activeObj = getActiveObjectSafe();
+        var activeObj = getActiveObjectSafe();
         if (!activeObj) {
             if (boldBtn) boldBtn.classList.remove('active');
             if (italicBtn) italicBtn.classList.remove('active');
@@ -223,13 +223,13 @@ function getActiveObjectsSafe() {
             return;
         }
 
-        const img = isImage(activeObj);
+        var img = isImage(activeObj);
 
         if (activeObj.type === 'textbox') {
             if (boldBtn) boldBtn.classList.toggle('active', activeObj.fontWeight === 'bold');
             if (italicBtn) italicBtn.classList.toggle('active', activeObj.fontStyle === 'italic');
             if (underlineBtn) underlineBtn.classList.toggle('active', !!activeObj.underline);
-            const align = activeObj.textAlign || 'left';
+            var align = activeObj.textAlign || 'left';
             if (alignLeftBtn) alignLeftBtn.classList.toggle('active', align === 'left');
             if (alignCenterBtn) alignCenterBtn.classList.toggle('active', align === 'center');
             if (alignRightBtn) alignRightBtn.classList.toggle('active', align === 'right');
@@ -252,27 +252,28 @@ function getActiveObjectsSafe() {
     }
 
     function updateFontSizeCheckmark(fontSize) {
-        document.querySelectorAll('#fontSizeMenu .dropdown-item').forEach(item => {
-            const check = item.querySelector('.check-icon');
+        var items = document.querySelectorAll('#fontSizeMenu .dropdown-item');
+        for (var i = 0; i < items.length; i++) {
+            var check = items[i].querySelector('.check-icon');
             if (check) {
-                check.style.display = (fontSize && parseInt(item.dataset.fontsize) === fontSize) ?
-                    'inline' : 'none';
+                var size = parseInt(items[i].dataset.fontsize);
+                check.style.display = (fontSize && size === fontSize) ? 'inline' : 'none';
             }
-        });
+        }
     }
 
     function updateLineHeightCheckmark(lineHeight) {
-        document.querySelectorAll('#lineHeightMenu .dropdown-item').forEach(item => {
-            const check = item.querySelector('.check-icon');
+        var items = document.querySelectorAll('#lineHeightMenu .dropdown-item');
+        for (var i = 0; i < items.length; i++) {
+            var check = items[i].querySelector('.check-icon');
             if (check) {
-                const val = parseFloat(item.dataset.lineheight);
-                check.style.display = (lineHeight && Math.abs(val - lineHeight) < 0.01) ?
-                    'inline' : 'none';
+                var val = parseFloat(items[i].dataset.lineheight);
+                check.style.display = (lineHeight && Math.abs(val - lineHeight) < 0.01) ? 'inline' : 'none';
             }
-        });
+        }
     }
 
-    const presetColors = [
+    var presetColors = [
         '#ffffff', '#000000', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
         '#1abc9c', '#3498db', '#9b59b6', '#ecf0f1', '#c0392b', '#2980b9',
         '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#f39c12', '#d35400',
@@ -280,35 +281,38 @@ function getActiveObjectsSafe() {
     ];
 
     function buildColorPalette(gridId, customInputId, callback) {
-        const grid = document.getElementById(gridId);
+        var grid = document.getElementById(gridId);
         if (!grid) return;
         grid.innerHTML = '';
-        presetColors.forEach(color => {
-            const swatch = document.createElement('div');
+        for (var i = 0; i < presetColors.length; i++) {
+            var color = presetColors[i];
+            var swatch = document.createElement('div');
             swatch.className = 'color-swatch';
             swatch.style.backgroundColor = color;
-            swatch.addEventListener('click', (e) => {
-                e.stopPropagation();
-                callback(color);
-                const customInput = document.getElementById(customInputId);
-                if (customInput) customInput.value = color;
-                const popup = grid.closest('.color-picker-popup');
-                if (popup) popup.classList.remove('show');
-            });
+            swatch.addEventListener('click', function(c) {
+                return function(e) {
+                    e.stopPropagation();
+                    callback(c);
+                    var customInput = document.getElementById(customInputId);
+                    if (customInput) customInput.value = c;
+                    var popup = grid.closest('.color-picker-popup');
+                    if (popup) popup.classList.remove('show');
+                };
+            }(color));
             grid.appendChild(swatch);
-        });
-        const customInput = document.getElementById(customInputId);
+        }
+        var customInput = document.getElementById(customInputId);
         if (customInput) {
-            customInput.addEventListener('input', (e) => {
+            customInput.addEventListener('input', function(e) {
                 callback(e.target.value);
             });
         }
     }
 
     function initCanvas() {
-        const existingCanvas = document.getElementById('fabric-canvas');
+        var existingCanvas = document.getElementById('fabric-canvas');
         if (existingCanvas) existingCanvas.remove();
-        const newCanvasElem = document.createElement('canvas');
+        var newCanvasElem = document.createElement('canvas');
         newCanvasElem.id = 'fabric-canvas';
         newCanvasElem.width = container.clientWidth || 900;
         newCanvasElem.height = container.clientHeight || 600;
@@ -322,12 +326,12 @@ function getActiveObjectsSafe() {
         canvas.setWidth(container.clientWidth);
         canvas.setHeight(container.clientHeight);
         canvas.renderAll();
-        canvas.on('object:added', () => scheduleHistorySave());
-        canvas.on('object:modified', () => scheduleHistorySave());
-        canvas.on('object:removed', () => scheduleHistorySave());
-        canvas.on('selection:created', () => updateStyleButtonsState());
-        canvas.on('selection:updated', () => updateStyleButtonsState());
-        canvas.on('selection:cleared', () => {
+        canvas.on('object:added', function() { scheduleHistorySave(); });
+        canvas.on('object:modified', function() { scheduleHistorySave(); });
+        canvas.on('object:removed', function() { scheduleHistorySave(); });
+        canvas.on('selection:created', function() { updateStyleButtonsState(); });
+        canvas.on('selection:updated', function() { updateStyleButtonsState(); });
+        canvas.on('selection:cleared', function() {
             if (boldBtn) boldBtn.classList.remove('active');
             if (italicBtn) italicBtn.classList.remove('active');
             if (underlineBtn) underlineBtn.classList.remove('active');
@@ -343,7 +347,7 @@ function getActiveObjectsSafe() {
     initCanvas();
     resetHistoryFromCurrentCanvas();
 
-    window.addEventListener('resize', () => {
+    window.addEventListener('resize', function() {
         if (canvas && container) {
             canvas.setWidth(container.clientWidth);
             canvas.setHeight(container.clientHeight);
@@ -370,7 +374,7 @@ function getActiveObjectsSafe() {
 
     function addTextBox() {
         if (!canvas) return;
-        const textbox = new fabric.Textbox('New Text', {
+        var textbox = new fabric.Textbox('New Text', {
             left: 100,
             top: 100,
             width: 200,
@@ -388,7 +392,7 @@ function getActiveObjectsSafe() {
 
     function addRectangle() {
         if (!canvas) return;
-        const rect = new fabric.Rect({
+        var rect = new fabric.Rect({
             left: 150,
             top: 150,
             width: 120,
@@ -405,7 +409,7 @@ function getActiveObjectsSafe() {
 
     function addCircle() {
         if (!canvas) return;
-        const circle = new fabric.Circle({
+        var circle = new fabric.Circle({
             left: 200,
             top: 200,
             radius: 50,
@@ -425,18 +429,18 @@ function getActiveObjectsSafe() {
 
     function addQRCode() {
         if (!canvas) return;
-        const text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
+        var text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
         if (!text || !text.trim()) return;
         
         // التحقق من صحة النص
-        const sanitizedText = sanitizeText(text.trim());
+        var sanitizedText = sanitizeText(text.trim());
         if (!isValidText(sanitizedText)) {
             alert('Invalid text detected. Please enter a valid URL or text.');
             return;
         }
         
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(sanitizedText)}`;
-        fabric.Image.fromURL(qrUrl, (img) => {
+        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(sanitizedText);
+        fabric.Image.fromURL(qrUrl, function(img) {
             if (!canvas) return;
             img.set({
                 left: (canvas.width - img.width * img.scaleX) / 2,
@@ -450,7 +454,7 @@ function getActiveObjectsSafe() {
     }
 
     function handleImageFileSelect(event) {
-        const file = event.target.files[0];
+        var file = event.target.files[0];
         if (!file) return;
         if (!file.type.startsWith('image/')) {
             alert('Please select a valid image file.');
@@ -459,22 +463,22 @@ function getActiveObjectsSafe() {
         }
         
         // التحقق من حجم الملف (حد أقصى 10MB)
-        const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+        var MAX_IMAGE_SIZE = 10 * 1024 * 1024;
         if (file.size > MAX_IMAGE_SIZE) {
-            alert(`Image file too large: ${(file.size / 1024 / 1024).toFixed(2)}MB (max 10MB)`);
+            alert('Image file too large: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB (max 10MB)');
             event.target.value = '';
             return;
         }
         
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(e) {
             if (!canvas) return;
-            fabric.Image.fromURL(e.target.result, (img) => {
+            fabric.Image.fromURL(e.target.result, function(img) {
                 if (!canvas) return;
-                const maxWidth = canvas.width * 0.6;
-                const maxHeight = canvas.height * 0.6;
+                var maxWidth = canvas.width * 0.6;
+                var maxHeight = canvas.height * 0.6;
                 if (img.width > maxWidth || img.height > maxHeight) {
-                    const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                    var scale = Math.min(maxWidth / img.width, maxHeight / img.height);
                     img.scale(scale);
                 } else {
                     img.scale(1);
@@ -489,16 +493,18 @@ function getActiveObjectsSafe() {
                 scheduleHistorySave();
             }, { crossOrigin: 'anonymous' });
         };
-        reader.onerror = () => alert('Failed to load image file.');
+        reader.onerror = function() { alert('Failed to load image file.'); };
         reader.readAsDataURL(file);
         event.target.value = '';
     }
 
     function deleteSelected() {
         if (!canvas) return;
-        const active = canvas.getActiveObjects();
+        var active = canvas.getActiveObjects();
         if (active.length) {
-            active.forEach(obj => canvas.remove(obj));
+            for (var i = 0; i < active.length; i++) {
+                canvas.remove(active[i]);
+            }
             canvas.discardActiveObject();
             canvas.renderAll();
             scheduleHistorySave();
@@ -507,7 +513,7 @@ function getActiveObjectsSafe() {
 
     function bringForward() {
         if (!canvas) return;
-        const obj = getActiveObjectSafe();
+        var obj = getActiveObjectSafe();
         if (obj) {
             canvas.bringForward(obj);
             canvas.renderAll();
@@ -517,7 +523,7 @@ function getActiveObjectsSafe() {
 
     function sendBackward() {
         if (!canvas) return;
-        const obj = getActiveObjectSafe();
+        var obj = getActiveObjectSafe();
         if (obj) {
             canvas.sendBackwards(obj);
             canvas.renderAll();
@@ -527,9 +533,11 @@ function getActiveObjectsSafe() {
 
     function applyToSelected(callback) {
         if (!canvas) return;
-        const actives = canvas.getActiveObjects();
+        var actives = canvas.getActiveObjects();
         if (actives.length) {
-            actives.forEach(obj => callback(obj));
+            for (var i = 0; i < actives.length; i++) {
+                callback(actives[i]);
+            }
             canvas.renderAll();
             scheduleHistorySave();
             updateStyleButtonsState();
@@ -537,7 +545,7 @@ function getActiveObjectsSafe() {
     }
 
     function setBold() {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
                 obj.fontWeight = (obj.fontWeight === 'bold') ? 'normal' : 'bold';
             }
@@ -545,7 +553,7 @@ function getActiveObjectsSafe() {
     }
 
     function setItalic() {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
                 obj.fontStyle = (obj.fontStyle === 'italic') ? 'normal' : 'italic';
             }
@@ -553,7 +561,7 @@ function getActiveObjectsSafe() {
     }
 
     function setUnderline() {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
                 obj.underline = !obj.underline;
             }
@@ -561,21 +569,21 @@ function getActiveObjectsSafe() {
     }
 
     function setFontSize(size) {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.fontSize !== undefined) obj.fontSize = parseInt(size);
         });
         document.getElementById('fontSizeContainer').classList.remove('open');
     }
 
     function setLineHeight(height) {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.lineHeight !== undefined) obj.lineHeight = parseFloat(height);
         });
         document.getElementById('lineHeightContainer').classList.remove('open');
     }
 
     function setFillColor(color) {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type !== 'image') {
                 obj.set('fill', color);
             }
@@ -583,7 +591,7 @@ function getActiveObjectsSafe() {
     }
 
     function setBackgroundColor(color) {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
                 obj.set('backgroundColor', color);
             }
@@ -591,19 +599,19 @@ function getActiveObjectsSafe() {
     }
 
     function setTextAlign(align) {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.textAlign !== undefined) obj.textAlign = align;
         });
     }
 
     function setCanvasBgColor(color) {
         if (!canvas) return;
-        canvas.setBackgroundColor(color, () => canvas.renderAll());
+        canvas.setBackgroundColor(color, function() { canvas.renderAll(); });
         markAsChanged();
     }
 
     function increaseIndent() {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
                 obj.text = '    ' + obj.text;
             }
@@ -611,16 +619,16 @@ function getActiveObjectsSafe() {
     }
 
     function decreaseIndent() {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
-                const trimmed = obj.text.replace(/^ {1,4}/, '');
+                var trimmed = obj.text.replace(/^ {1,4}/, '');
                 obj.text = trimmed;
             }
         });
     }
 
     function transformText(type) {
-        applyToSelected(obj => {
+        applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
                 switch (type) {
                     case 'uppercase':
@@ -630,7 +638,7 @@ function getActiveObjectsSafe() {
                         obj.text = obj.text.toLowerCase();
                         break;
                     case 'capitalize':
-                        obj.text = obj.text.replace(/\b\w/g, c => c.toUpperCase());
+                        obj.text = obj.text.replace(/\b\w/g, function(c) { return c.toUpperCase(); });
                         break;
                 }
             }
@@ -661,10 +669,10 @@ function getActiveObjectsSafe() {
     function exportAsREDC() {
         if (!canvas) return;
         try {
-            const dataStr = JSON.stringify(canvas.toJSON(['id']), null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            var dataStr = JSON.stringify(canvas.toJSON(['id']), null, 2);
+            var blob = new Blob([dataStr], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
             a.download = 'canvas.redc';
             a.click();
@@ -681,15 +689,15 @@ function getActiveObjectsSafe() {
             if (!confirm('Importing will replace the current canvas content. Are you sure?')) return;
         }
         
-        const reader = new FileReader();
-        reader.onload = (e) => {
+        var reader = new FileReader();
+        reader.onload = function(e) {
             try {
-                const json = JSON.parse(e.target.result);
+                var json = JSON.parse(e.target.result);
                 
                 // التحقق من صحة الملف
                 validateREDCFile(json);
                 
-                canvas.loadFromJSON(json, () => {
+                canvas.loadFromJSON(json, function() {
                     canvas.renderAll();
                     resetHistoryFromCurrentCanvas();
                     updateZoomDisplay();
@@ -699,126 +707,145 @@ function getActiveObjectsSafe() {
                 alert('Import failed: ' + err.message);
             }
         };
-        reader.onerror = () => alert('Error reading file.');
+        reader.onerror = function() { alert('Error reading file.'); };
         reader.readAsText(file);
     }
 
-    const actionsMap = {
+    var actionsMap = {
         newDoc: newCanvas,
-        undo,
-        redo,
-        deleteSelected,
+        undo: undo,
+        redo: redo,
+        deleteSelected: deleteSelected,
         addText: addTextBox,
         addImage: addImageFromFile,
-        addRectangle,
-        addCircle,
+        addRectangle: addRectangle,
+        addCircle: addCircle,
         addQR: addQRCode,
         bold: setBold,
         italic: setItalic,
         underline: setUnderline,
-        alignLeft: () => setTextAlign('left'),
-        alignCenter: () => setTextAlign('center'),
-        alignRight: () => setTextAlign('right'),
-        bringForward,
-        sendBackward,
-        zoomIn,
-        zoomOut,
-        focusMode: () => document.body.classList.toggle('focus-mode'),
+        alignLeft: function() { setTextAlign('left'); },
+        alignCenter: function() { setTextAlign('center'); },
+        alignRight: function() { setTextAlign('right'); },
+        bringForward: bringForward,
+        sendBackward: sendBackward,
+        zoomIn: zoomIn,
+        zoomOut: zoomOut,
+        focusMode: function() { document.body.classList.toggle('focus-mode'); },
         exportRedc: exportAsREDC,
         indentInc: increaseIndent,
         indentDec: decreaseIndent
     };
 
-    document.getElementById('toolbar').addEventListener('click', (e) => {
-        const btn = e.target.closest('.tool-btn');
+    document.getElementById('toolbar').addEventListener('click', function(e) {
+        var btn = e.target.closest('.tool-btn');
         if (!btn || btn.closest('.dropdown-container')) return;
-        const action = btn.dataset.action;
+        var action = btn.dataset.action;
         if (action && actionsMap[action]) actionsMap[action]();
     });
 
     document.getElementById('imageFileInput').addEventListener('change', handleImageFileSelect);
 
-    document.querySelectorAll('[data-fontsize]').forEach(el => {
-        el.addEventListener('click', () => {
-            setFontSize(el.dataset.fontsize);
-            updateFontSizeCheckmark(parseInt(el.dataset.fontsize));
+    var fontSizeItems = document.querySelectorAll('[data-fontsize]');
+    for (var fi = 0; fi < fontSizeItems.length; fi++) {
+        fontSizeItems[fi].addEventListener('click', function() {
+            setFontSize(this.dataset.fontsize);
+            updateFontSizeCheckmark(parseInt(this.dataset.fontsize));
         });
-    });
+    }
 
-    document.querySelectorAll('[data-lineheight]').forEach(el => {
-        el.addEventListener('click', () => {
-            setLineHeight(el.dataset.lineheight);
-            updateLineHeightCheckmark(parseFloat(el.dataset.lineheight));
+    var lineHeightItems = document.querySelectorAll('[data-lineheight]');
+    for (var lh = 0; lh < lineHeightItems.length; lh++) {
+        lineHeightItems[lh].addEventListener('click', function() {
+            setLineHeight(this.dataset.lineheight);
+            updateLineHeightCheckmark(parseFloat(this.dataset.lineheight));
         });
-    });
+    }
 
-    document.querySelectorAll('[data-transform]').forEach(el => {
-        el.addEventListener('click', () => transformText(el.dataset.transform));
-    });
+    var transformItems = document.querySelectorAll('[data-transform]');
+    for (var tr = 0; tr < transformItems.length; tr++) {
+        transformItems[tr].addEventListener('click', function() {
+            transformText(this.dataset.transform);
+        });
+    }
 
     buildColorPalette('fillColorGrid', 'fillColorCustom', setFillColor);
     buildColorPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
     buildColorPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
 
     function setupColorDropdown(containerId, pickerId) {
-        const container = document.getElementById(containerId);
-        const picker = document.getElementById(pickerId);
+        var container = document.getElementById(containerId);
+        var picker = document.getElementById(pickerId);
         if (!container || !picker) return;
-        const btn = container.querySelector('.tool-btn');
+        var btn = container.querySelector('.tool-btn');
         if (!btn) return;
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            document.querySelectorAll('.color-picker-popup.show').forEach(p => {
-                if (p !== picker) p.classList.remove('show');
-            });
-            document.querySelectorAll('.dropdown-container.open').forEach(d => {
-                if (d !== container) d.classList.remove('open');
-            });
+            var popups = document.querySelectorAll('.color-picker-popup.show');
+            for (var p = 0; p < popups.length; p++) {
+                if (popups[p] !== picker) popups[p].classList.remove('show');
+            }
+            var containers = document.querySelectorAll('.dropdown-container.open');
+            for (var c = 0; c < containers.length; c++) {
+                if (containers[c] !== container) containers[c].classList.remove('open');
+            }
             picker.classList.toggle('show');
         });
-        picker.addEventListener('click', (e) => e.stopPropagation());
+        picker.addEventListener('click', function(e) { e.stopPropagation(); });
     }
 
     setupColorDropdown('fillColorContainer', 'fillColorPicker');
     setupColorDropdown('bgColorContainer', 'bgColorPicker');
     setupColorDropdown('canvasBgContainer', 'canvasBgPicker');
 
-    document.querySelectorAll(
-            '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
-        )
-        .forEach(cont => {
-            const btn = cont.querySelector('.tool-btn');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
+    var dropdowns = document.querySelectorAll(
+        '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
+    );
+    for (var d = 0; d < dropdowns.length; d++) {
+        var cont = dropdowns[d];
+        var btn = cont.querySelector('.tool-btn');
+        if (btn) {
+            btn.addEventListener('click', function(c) {
+                return function(e) {
                     e.stopPropagation();
-                    document.querySelectorAll('.color-picker-popup.show').forEach(p => p
-                        .classList.remove('show'));
-                    cont.classList.toggle('open');
-                });
-            }
-            cont.addEventListener('click', (e) => e.stopPropagation());
-        });
+                    var popups = document.querySelectorAll('.color-picker-popup.show');
+                    for (var p = 0; p < popups.length; p++) {
+                        popups[p].classList.remove('show');
+                    }
+                    c.classList.toggle('open');
+                };
+            }(cont));
+        }
+        cont.addEventListener('click', function(e) { e.stopPropagation(); });
+    }
 
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.dropdown-container.open').forEach(c => c.classList.remove('open'));
-        document.querySelectorAll('.color-picker-popup.show').forEach(p => p.classList.remove('show'));
+    document.addEventListener('click', function() {
+        var containers = document.querySelectorAll('.dropdown-container.open');
+        for (var c = 0; c < containers.length; c++) {
+            containers[c].classList.remove('open');
+        }
+        var popups = document.querySelectorAll('.color-picker-popup.show');
+        for (var p = 0; p < popups.length; p++) {
+            popups[p].classList.remove('show');
+        }
     });
 
-    document.getElementById('importJsonBtn').addEventListener('click', () => {
+    document.getElementById('importJsonBtn').addEventListener('click', function() {
         document.getElementById('importFileInput').click();
     });
 
-    document.getElementById('importFileInput').addEventListener('change', (e) => {
+    document.getElementById('importFileInput').addEventListener('change', function(e) {
         if (e.target.files[0]) {
             importJSON(e.target.files[0]);
             e.target.value = '';
         }
     });
 
-    document.getElementById('exitFocusBtn').addEventListener('click', () => document.body.classList.remove(
-        'focus-mode'));
+    document.getElementById('exitFocusBtn').addEventListener('click', function() {
+        document.body.classList.remove('focus-mode');
+    });
 
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
             document.body.classList.remove('focus-mode');
         }
