@@ -10,9 +10,9 @@
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' https://fonts.gstatic.com data:;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+        style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+        font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
         img-src 'self' https://i.postimg.cc https://api.qrserver.com data:;
         connect-src 'self' https://api.qrserver.com;
         frame-src 'none';
@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js">
     </script>
@@ -35,54 +35,54 @@
             <img class="logo" src="https://i.postimg.cc/s2j0rzBZ/swrh-restudio.png" alt="ReStudio Logo">
             <span class="brand-text">Documents</span>
         </div>
-        <button class="exit-focus-btn" id="exitFocusBtn"><span class="material-icons">close_fullscreen</span> Exit</button>
+        <button class="exit-focus-btn" id="exitFocusBtn"><i class="ti ti-arrows-minimize"></i> Exit</button>
     </header>
 
     <div class="toolbar" id="toolbar">
         <div class="tool-group">
-            <button class="tool-btn" data-action="newDoc" title="New empty canvas"><span class="material-icons">note_add</span> New</button>
+            <button class="tool-btn" data-action="newDoc" title="New empty canvas"><i class="ti ti-file-plus"></i> New</button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="undo" title="Undo (Ctrl+Z)"><span class="material-icons">undo</span></button>
-            <button class="tool-btn" data-action="redo" title="Redo (Ctrl+Y)"><span class="material-icons">redo</span></button>
-            <button class="tool-btn" data-action="deleteSelected" title="Delete selected (Del key)"><span class="material-icons">delete</span> Delete</button>
+            <button class="tool-btn" data-action="undo" title="Undo (Ctrl+Z)"><i class="ti ti-arrow-back-up"></i></button>
+            <button class="tool-btn" data-action="redo" title="Redo (Ctrl+Y)"><i class="ti ti-arrow-forward-up"></i></button>
+            <button class="tool-btn" data-action="deleteSelected" title="Delete selected (Del key)"><i class="ti ti-trash"></i> Delete</button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="addText" title="Add text box"><span class="material-icons">text_fields</span> Text</button>
-            <button class="tool-btn" data-action="addImage" title="Insert image from file"><span class="material-icons">image</span> Image</button>
+            <button class="tool-btn" data-action="addText" title="Add text box"><i class="ti ti-text-size"></i> Text</button>
+            <button class="tool-btn" data-action="addImage" title="Insert image from file"><i class="ti ti-photo"></i> Image</button>
             <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
-            <button class="tool-btn" data-action="addRectangle" title="Add rectangle"><span class="material-icons">crop_square</span> Rectangle</button>
-            <button class="tool-btn" data-action="addCircle" title="Add circle"><span class="material-icons">circle</span> Circle</button>
-            <button class="tool-btn" data-action="addQR" title="Add QR code from text or URL"><span class="material-icons">qr_code</span> QR</button>
+            <button class="tool-btn" data-action="addRectangle" title="Add rectangle"><i class="ti ti-square"></i> Rectangle</button>
+            <button class="tool-btn" data-action="addCircle" title="Add circle"><i class="ti ti-circle"></i> Circle</button>
+            <button class="tool-btn" data-action="addQR" title="Add QR code from text or URL"><i class="ti ti-qrcode"></i> QR</button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="bold" title="Bold"><span class="material-icons">format_bold</span></button>
-            <button class="tool-btn" data-action="italic" title="Italic"><span class="material-icons">format_italic</span></button>
-            <button class="tool-btn" data-action="underline" title="Underline"><span class="material-icons">format_underlined</span></button>
+            <button class="tool-btn" data-action="bold" title="Bold"><i class="ti ti-bold"></i></button>
+            <button class="tool-btn" data-action="italic" title="Italic"><i class="ti ti-italic"></i></button>
+            <button class="tool-btn" data-action="underline" title="Underline"><i class="ti ti-underline"></i></button>
             <div class="dropdown-container" id="fontSizeContainer">
-                <button class="tool-btn" title="Font size"><span class="material-icons">format_size</span> Size</button>
+                <button class="tool-btn" title="Font size"><i class="ti ti-font-size"></i> Size</button>
                 <div class="dropdown-content" id="fontSizeMenu">
-                    <div class="dropdown-item" data-fontsize="12">12px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="18">18px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="24">24px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="32">32px <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-fontsize="48">48px <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-fontsize="12">12px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="18">18px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="24">24px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="32">32px <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-fontsize="48">48px <i class="ti ti-check check-icon" style="display:none;"></i></div>
                 </div>
             </div>
-            <button class="tool-btn" data-action="indentInc" title="Increase text indent"><span class="material-icons">format_indent_increase</span></button>
-            <button class="tool-btn" data-action="indentDec" title="Decrease text indent"><span class="material-icons">format_indent_decrease</span></button>
+            <button class="tool-btn" data-action="indentInc" title="Increase text indent"><i class="ti ti-indent-increase"></i></button>
+            <button class="tool-btn" data-action="indentDec" title="Decrease text indent"><i class="ti ti-indent-decrease"></i></button>
             <div class="dropdown-container" id="lineHeightContainer">
-                <button class="tool-btn" title="Line height"><span class="material-icons">format_line_spacing</span> Line H</button>
+                <button class="tool-btn" title="Line height"><i class="ti ti-line-height"></i> Line H</button>
                 <div class="dropdown-content" id="lineHeightMenu">
-                    <div class="dropdown-item" data-lineheight="1">1.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="1.5">1.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="2">2.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="2.5">2.5 <span class="check-icon material-icons" style="display:none;">check</span></div>
-                    <div class="dropdown-item" data-lineheight="3">3.0 <span class="check-icon material-icons" style="display:none;">check</span></div>
+                    <div class="dropdown-item" data-lineheight="1">1.0 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="1.5">1.5 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="2">2.0 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="2.5">2.5 <i class="ti ti-check check-icon" style="display:none;"></i></div>
+                    <div class="dropdown-item" data-lineheight="3">3.0 <i class="ti ti-check check-icon" style="display:none;"></i></div>
                 </div>
             </div>
             <div class="dropdown-container" id="textTransformContainer">
-                <button class="tool-btn" title="Change text case"><span class="material-icons">text_fields</span> Aa</button>
+                <button class="tool-btn" title="Change text case"><i class="ti ti-text-case"></i> Aa</button>
                 <div class="dropdown-content" id="textTransformMenu">
                     <div class="dropdown-item" data-transform="uppercase">UPPERCASE</div>
                     <div class="dropdown-item" data-transform="lowercase">lowercase</div>
@@ -92,7 +92,7 @@
         </div>
         <div class="tool-group">
             <div class="dropdown-container" id="fillColorContainer">
-                <button class="tool-btn" id="fillColorBtn" title="Element color (fill) - for text & shapes only"><span class="material-icons">format_color_text</span> Fill</button>
+                <button class="tool-btn" id="fillColorBtn" title="Element color (fill) - for text & shapes only"><i class="ti ti-color-swatch"></i> Fill</button>
                 <div class="color-picker-popup" id="fillColorPicker">
                     <span class="color-picker-label">Select element color</span>
                     <div class="color-picker-grid" id="fillColorGrid"></div>
@@ -100,7 +100,7 @@
                 </div>
             </div>
             <div class="dropdown-container" id="bgColorContainer">
-                <button class="tool-btn" id="bgColorBtn" title="Background color - only for text"><span class="material-icons">format_color_fill</span> BG</button>
+                <button class="tool-btn" id="bgColorBtn" title="Background color - only for text"><i class="ti ti-color-fill"></i> BG</button>
                 <div class="color-picker-popup" id="bgColorPicker">
                     <span class="color-picker-label">Select text background color</span>
                     <div class="color-picker-grid" id="bgColorGrid"></div>
@@ -108,7 +108,7 @@
                 </div>
             </div>
             <div class="dropdown-container" id="canvasBgContainer">
-                <button class="tool-btn" title="Page background color"><span class="material-icons">palette</span> Page BG</button>
+                <button class="tool-btn" title="Page background color"><i class="ti ti-palette"></i> Page BG</button>
                 <div class="color-picker-popup" id="canvasBgPicker">
                     <span class="color-picker-label">Select page background color</span>
                     <div class="color-picker-grid" id="canvasBgGrid"></div>
@@ -117,21 +117,21 @@
             </div>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="alignLeft" title="Align left"><span class="material-icons">format_align_left</span></button>
-            <button class="tool-btn" data-action="alignCenter" title="Align center"><span class="material-icons">format_align_center</span></button>
-            <button class="tool-btn" data-action="alignRight" title="Align right"><span class="material-icons">format_align_right</span></button>
+            <button class="tool-btn" data-action="alignLeft" title="Align left"><i class="ti ti-align-left"></i></button>
+            <button class="tool-btn" data-action="alignCenter" title="Align center"><i class="ti ti-align-center"></i></button>
+            <button class="tool-btn" data-action="alignRight" title="Align right"><i class="ti ti-align-right"></i></button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="bringForward" title="Bring forward"><span class="material-icons">arrow_upward</span> Forward</button>
-            <button class="tool-btn" data-action="sendBackward" title="Send backward"><span class="material-icons">arrow_downward</span> Backward</button>
-            <button class="tool-btn" data-action="zoomIn" title="Zoom in"><span class="material-icons">zoom_in</span></button>
+            <button class="tool-btn" data-action="bringForward" title="Bring forward"><i class="ti ti-arrow-up"></i> Forward</button>
+            <button class="tool-btn" data-action="sendBackward" title="Send backward"><i class="ti ti-arrow-down"></i> Backward</button>
+            <button class="tool-btn" data-action="zoomIn" title="Zoom in"><i class="ti ti-zoom-in"></i></button>
             <span class="zoom-level" id="zoomLevelDisplay">100%</span>
-            <button class="tool-btn" data-action="zoomOut" title="Zoom out"><span class="material-icons">zoom_out</span></button>
-            <button class="tool-btn" data-action="focusMode" title="Focus mode (Esc to exit)"><span class="material-icons">center_focus_strong</span> Focus</button>
+            <button class="tool-btn" data-action="zoomOut" title="Zoom out"><i class="ti ti-zoom-out"></i></button>
+            <button class="tool-btn" data-action="focusMode" title="Focus mode (Esc to exit)"><i class="ti ti-focus-2"></i> Focus</button>
         </div>
         <div class="tool-group">
-            <button class="tool-btn" data-action="exportRedc" title="Export as .REDC file"><span class="material-icons">download</span> Export REDC</button>
-            <button class="tool-btn" id="importJsonBtn" title="Import .REDC file"><span class="material-icons">upload</span> Import</button>
+            <button class="tool-btn" data-action="exportRedc" title="Export as .REDC file"><i class="ti ti-download"></i> Export REDC</button>
+            <button class="tool-btn" id="importJsonBtn" title="Import .REDC file"><i class="ti ti-upload"></i> Import</button>
             <input type="file" id="importFileInput" accept=".redc,.restudio,.json" style="display:none;">
         </div>
     </div>
