@@ -149,45 +149,40 @@ function getActiveObjectsSafe(canvasInstance) {
             existingCanvas.remove();
         }
 
-        // Create new canvas element
+        // إنشاء عنصر كانفس جديد مع fallback للأبعاد
         const newCanvasElem = document.createElement('canvas');
         newCanvasElem.id = 'fabric-canvas';
-        newCanvasElem.width = container.clientWidth || 900;
-        newCanvasElem.height = container.clientHeight || 600;
+        const containerWidth = container.clientWidth || 900;
+        const containerHeight = container.clientHeight || 600;
+        newCanvasElem.width = containerWidth;
+        newCanvasElem.height = containerHeight;
         
-        // Clear container and append new canvas
+        // تفريغ الحاوية وإضافة الكانفس
         container.innerHTML = '';
         container.appendChild(newCanvasElem);
 
         try {
-            // Initialize Fabric.js canvas with improved selection settings
+            // تهيئة Fabric.js مع إعدادات تحديد محسّنة
             canvas = new fabric.Canvas('fabric-canvas', {
                 preserveObjectStacking: true,
                 selection: true,
                 renderOnAddRemove: true,
-                // Selection visual enhancements
+                // تحسينات مرئية للتحديد
                 selectionColor: 'rgba(0, 100, 200, 0.2)',
                 selectionDashArray: [5, 5],
-                // Ensure objects are interactive
-                evented: true,
-                // Allow selecting objects even when clicking on transparent parts
+                // ضبط اكتشاف الأهداف بدقة أعلى
                 perPixelTargetFind: true,
-                // Improve target finding
-                targetFindTolerance: 3,
-                // Enable selection by dragging
-                selection: true,
-                // Allow selecting objects via click
+                targetFindTolerance: 8,   // زيادة التسامح لتسهيل التحديد
                 interactive: true,
             });
 
-            // Set dimensions
-            canvas.setWidth(container.clientWidth);
-            canvas.setHeight(container.clientHeight);
+            // تعيين الأبعاد مع fallback
+            canvas.setWidth(containerWidth);
+            canvas.setHeight(containerHeight);
             
-            // Render
             canvas.renderAll();
 
-            // Setup event listeners
+            // ربط الأحداث
             setupCanvasEvents();
 
             isInitialized = true;
@@ -195,7 +190,7 @@ function getActiveObjectsSafe(canvasInstance) {
             updateZoomDisplay();
             updateUndoRedoButtons();
             
-            // Disable color buttons initially
+            // تعطيل أزرار الألوان مبدئياً
             if (fillColorBtn) fillColorBtn.disabled = true;
             if (bgColorBtn) bgColorBtn.disabled = true;
 
@@ -211,7 +206,7 @@ function getActiveObjectsSafe(canvasInstance) {
     function setupCanvasEvents() {
         if (!canvas) return;
 
-        // Remove old listeners to prevent memory leaks
+        // إزالة المستمعات القديمة لمنع التسريبات
         canvas.off('object:added');
         canvas.off('object:modified');
         canvas.off('object:removed');
@@ -221,7 +216,7 @@ function getActiveObjectsSafe(canvasInstance) {
         canvas.off('mouse:down');
         canvas.off('mouse:up');
 
-        // Add new listeners
+        // إضافة مستمعات جديدة
         canvas.on('object:added', function() {
             scheduleHistorySave();
         });
@@ -246,7 +241,7 @@ function getActiveObjectsSafe(canvasInstance) {
         
         canvas.on('selection:cleared', function() {
             console.log('Selection cleared');
-            // Reset button states
+            // إعادة تعيين حالات الأزرار
             if (boldBtn) boldBtn.classList.remove('active');
             if (italicBtn) italicBtn.classList.remove('active');
             if (underlineBtn) underlineBtn.classList.remove('active');
@@ -259,7 +254,7 @@ function getActiveObjectsSafe(canvasInstance) {
             if (bgColorBtn) bgColorBtn.disabled = true;
         });
 
-        // Debug mouse events
+        // أحداث الماوس للتشخيص
         canvas.on('mouse:down', function(options) {
             console.log('Mouse down on canvas:', options.target ? options.target.type : 'empty');
         });
@@ -496,8 +491,8 @@ function getActiveObjectsSafe(canvasInstance) {
             evented: true,
             hoverCursor: 'pointer',
             moveCursor: 'move',
-            // مهم للتحديد بالماوس
-            perPixelTargetFind: true,
+            // إزالة perPixelTargetFind:true لتحسين التحديد
+            perPixelTargetFind: false,
         });
         
         canvas.add(textbox);
@@ -522,7 +517,8 @@ function getActiveObjectsSafe(canvasInstance) {
             evented: true,
             hoverCursor: 'pointer',
             moveCursor: 'move',
-            perPixelTargetFind: true,
+            // عدم استخدام perPixelTargetFind للمستطيل لتسهيل التحديد
+            perPixelTargetFind: false,
         });
         
         canvas.add(rect);
@@ -546,7 +542,7 @@ function getActiveObjectsSafe(canvasInstance) {
             evented: true,
             hoverCursor: 'pointer',
             moveCursor: 'move',
-            perPixelTargetFind: true,
+            perPixelTargetFind: false,
         });
         
         canvas.add(circle);
@@ -585,7 +581,7 @@ function getActiveObjectsSafe(canvasInstance) {
                 evented: true,
                 hoverCursor: 'pointer',
                 moveCursor: 'move',
-                perPixelTargetFind: true,
+                perPixelTargetFind: false, // تسهيل التحديد
             });
             
             canvas.add(img);
@@ -637,7 +633,7 @@ function getActiveObjectsSafe(canvasInstance) {
                     evented: true,
                     hoverCursor: 'pointer',
                     moveCursor: 'move',
-                    perPixelTargetFind: true,
+                    perPixelTargetFind: false, // تسهيل التحديد
                 });
                 
                 canvas.add(img);
@@ -1028,11 +1024,13 @@ function getActiveObjectsSafe(canvasInstance) {
             }
         });
 
-        // Window resize
+        // Window resize with fallback
         window.addEventListener('resize', function() {
             if (canvas && container && isInitialized) {
-                canvas.setWidth(container.clientWidth);
-                canvas.setHeight(container.clientHeight);
+                const w = container.clientWidth || 900;
+                const h = container.clientHeight || 600;
+                canvas.setWidth(w);
+                canvas.setHeight(h);
                 canvas.renderAll();
             }
         });
