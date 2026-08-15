@@ -42,32 +42,27 @@ function validateREDCFile(data) {
         throw new Error('Invalid file format: Data is not an object');
     }
     
-    // التحقق من حجم البيانات
     const MAX_FILE_SIZE_MB = 20;
     const jsonString = JSON.stringify(data);
     const sizeInMB = new Blob([jsonString]).size / (1024 * 1024);
     if (sizeInMB > MAX_FILE_SIZE_MB) {
-        throw new Error(`File too large: ${sizeInMB.toFixed(2)}MB (max ${MAX_FILE_SIZE_MB}MB)`);
+        throw new Error('File too large: ' + sizeInMB.toFixed(2) + 'MB (max ' + MAX_FILE_SIZE_MB + 'MB)');
     }
     
-    // التحقق من وجود objects ونسقها
     if (data.objects && !Array.isArray(data.objects)) {
         throw new Error('Invalid file: Objects must be an array');
     }
     
-    // التحقق من صحة كل object
     if (data.objects) {
         for (let i = 0; i < data.objects.length; i++) {
             const obj = data.objects[i];
             if (!obj || typeof obj !== 'object') {
-                throw new Error(`Invalid object at index ${i}`);
+                throw new Error('Invalid object at index ' + i);
             }
-            // التحقق من type مسموح به
             const allowedTypes = ['textbox', 'rect', 'circle', 'image', 'group'];
             if (obj.type && !allowedTypes.includes(obj.type)) {
-                throw new Error(`Invalid object type: ${obj.type}`);
+                throw new Error('Invalid object type: ' + obj.type);
             }
-            // تطهير النصوص في الملف المستورد
             if (obj.type === 'textbox' && obj.text) {
                 if (!isValidText(obj.text)) {
                     throw new Error('Suspicious content detected in text object');
@@ -165,12 +160,24 @@ function getActiveObjectsSafe(canvasInstance) {
         container.appendChild(newCanvasElem);
 
         try {
-            // Initialize Fabric.js canvas
+            // Initialize Fabric.js canvas with improved selection settings
             canvas = new fabric.Canvas('fabric-canvas', {
                 preserveObjectStacking: true,
                 selection: true,
-                backgroundColor: '#2b2b2b',
-                renderOnAddRemove: true
+                renderOnAddRemove: true,
+                // Selection visual enhancements
+                selectionColor: 'rgba(0, 100, 200, 0.2)',
+                selectionDashArray: [5, 5],
+                // Ensure objects are interactive
+                evented: true,
+                // Allow selecting objects even when clicking on transparent parts
+                perPixelTargetFind: true,
+                // Improve target finding
+                targetFindTolerance: 3,
+                // Enable selection by dragging
+                selection: true,
+                // Allow selecting objects via click
+                interactive: true,
             });
 
             // Set dimensions
@@ -192,6 +199,8 @@ function getActiveObjectsSafe(canvasInstance) {
             if (fillColorBtn) fillColorBtn.disabled = true;
             if (bgColorBtn) bgColorBtn.disabled = true;
 
+            console.log('Canvas initialized successfully');
+
         } catch (err) {
             console.error('Error initializing canvas:', err);
             isInitialized = false;
@@ -209,6 +218,8 @@ function getActiveObjectsSafe(canvasInstance) {
         canvas.off('selection:created');
         canvas.off('selection:updated');
         canvas.off('selection:cleared');
+        canvas.off('mouse:down');
+        canvas.off('mouse:up');
 
         // Add new listeners
         canvas.on('object:added', function() {
@@ -223,15 +234,18 @@ function getActiveObjectsSafe(canvasInstance) {
             scheduleHistorySave();
         });
         
-        canvas.on('selection:created', function() {
+        canvas.on('selection:created', function(options) {
+            console.log('Selection created:', options);
             updateStyleButtonsState();
         });
         
-        canvas.on('selection:updated', function() {
+        canvas.on('selection:updated', function(options) {
+            console.log('Selection updated:', options);
             updateStyleButtonsState();
         });
         
         canvas.on('selection:cleared', function() {
+            console.log('Selection cleared');
             // Reset button states
             if (boldBtn) boldBtn.classList.remove('active');
             if (italicBtn) italicBtn.classList.remove('active');
@@ -243,6 +257,15 @@ function getActiveObjectsSafe(canvasInstance) {
             updateLineHeightCheckmark(null);
             if (fillColorBtn) fillColorBtn.disabled = true;
             if (bgColorBtn) bgColorBtn.disabled = true;
+        });
+
+        // Debug mouse events
+        canvas.on('mouse:down', function(options) {
+            console.log('Mouse down on canvas:', options.target ? options.target.type : 'empty');
+        });
+        
+        canvas.on('mouse:up', function(options) {
+            console.log('Mouse up on canvas');
         });
     }
 
@@ -468,13 +491,20 @@ function getActiveObjectsSafe(canvasInstance) {
             fill: '#ffffff',
             fontFamily: 'Segoe UI',
             hasControls: true,
-            hasBorders: true
+            hasBorders: true,
+            selectable: true,
+            evented: true,
+            hoverCursor: 'pointer',
+            moveCursor: 'move',
+            // مهم للتحديد بالماوس
+            perPixelTargetFind: true,
         });
         
         canvas.add(textbox);
         canvas.setActiveObject(textbox);
         canvas.renderAll();
         scheduleHistorySave();
+        console.log('Text box added and selected');
     }
 
     function addRectangle() {
@@ -487,13 +517,19 @@ function getActiveObjectsSafe(canvasInstance) {
             height: 80,
             fill: '#3498db',
             stroke: '#ffffff',
-            strokeWidth: 2
+            strokeWidth: 2,
+            selectable: true,
+            evented: true,
+            hoverCursor: 'pointer',
+            moveCursor: 'move',
+            perPixelTargetFind: true,
         });
         
         canvas.add(rect);
         canvas.setActiveObject(rect);
         canvas.renderAll();
         scheduleHistorySave();
+        console.log('Rectangle added and selected');
     }
 
     function addCircle() {
@@ -505,13 +541,19 @@ function getActiveObjectsSafe(canvasInstance) {
             radius: 50,
             fill: '#e67e22',
             stroke: '#fff',
-            strokeWidth: 2
+            strokeWidth: 2,
+            selectable: true,
+            evented: true,
+            hoverCursor: 'pointer',
+            moveCursor: 'move',
+            perPixelTargetFind: true,
         });
         
         canvas.add(circle);
         canvas.setActiveObject(circle);
         canvas.renderAll();
         scheduleHistorySave();
+        console.log('Circle added and selected');
     }
 
     function addImageFromFile() {
@@ -525,27 +567,32 @@ function getActiveObjectsSafe(canvasInstance) {
         const text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
         if (!text || !text.trim()) return;
         
-        // التحقق من صحة النص
         const sanitizedText = sanitizeText(text.trim());
         if (!isValidText(sanitizedText)) {
             alert('Invalid text detected. Please enter a valid URL or text.');
             return;
         }
         
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(sanitizedText)}`;
+        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(sanitizedText);
         
         fabric.Image.fromURL(qrUrl, function(img) {
             if (!canvas || !isInitialized) return;
             
             img.set({
                 left: (canvas.width - img.width * img.scaleX) / 2,
-                top: (canvas.height - img.height * img.scaleY) / 2
+                top: (canvas.height - img.height * img.scaleY) / 2,
+                selectable: true,
+                evented: true,
+                hoverCursor: 'pointer',
+                moveCursor: 'move',
+                perPixelTargetFind: true,
             });
             
             canvas.add(img);
             canvas.setActiveObject(img);
             canvas.renderAll();
             scheduleHistorySave();
+            console.log('QR code added and selected');
         }, { crossOrigin: 'anonymous' });
     }
 
@@ -559,10 +606,9 @@ function getActiveObjectsSafe(canvasInstance) {
             return;
         }
         
-        // التحقق من حجم الملف (حد أقصى 10MB)
         const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
         if (file.size > MAX_IMAGE_SIZE) {
-            alert(`Image file too large: ${(file.size / 1024 / 1024).toFixed(2)}MB (max 10MB)`);
+            alert('Image file too large: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB (max 10MB)');
             event.target.value = '';
             return;
         }
@@ -586,13 +632,19 @@ function getActiveObjectsSafe(canvasInstance) {
                 
                 img.set({
                     left: (canvas.width - img.width * img.scaleX) / 2,
-                    top: (canvas.height - img.height * img.scaleY) / 2
+                    top: (canvas.height - img.height * img.scaleY) / 2,
+                    selectable: true,
+                    evented: true,
+                    hoverCursor: 'pointer',
+                    moveCursor: 'move',
+                    perPixelTargetFind: true,
                 });
                 
                 canvas.add(img);
                 canvas.setActiveObject(img);
                 canvas.renderAll();
                 scheduleHistorySave();
+                console.log('Image added and selected');
             }, { crossOrigin: 'anonymous' });
         };
         
@@ -615,6 +667,7 @@ function getActiveObjectsSafe(canvasInstance) {
             canvas.discardActiveObject();
             canvas.renderAll();
             scheduleHistorySave();
+            console.log('Selected objects deleted');
         }
     }
 
@@ -828,8 +881,6 @@ function getActiveObjectsSafe(canvasInstance) {
         reader.onload = function(e) {
             try {
                 const json = JSON.parse(e.target.result);
-                
-                // التحقق من صحة الملف
                 validateREDCFile(json);
                 
                 canvas.loadFromJSON(json, function() {
@@ -837,6 +888,7 @@ function getActiveObjectsSafe(canvasInstance) {
                     resetHistoryFromCurrentCanvas();
                     updateZoomDisplay();
                     hasUnsavedChanges = false;
+                    console.log('File imported successfully');
                 });
             } catch (err) {
                 alert('Import failed: ' + err.message);
@@ -1052,6 +1104,7 @@ function getActiveObjectsSafe(canvasInstance) {
 
     // ============ Initialize ============
     function init() {
+        console.log('Initializing Restudio Documents...');
         initCanvas();
         setupEventListeners();
         updateZoomDisplay();
@@ -1059,6 +1112,8 @@ function getActiveObjectsSafe(canvasInstance) {
         
         if (fillColorBtn) fillColorBtn.disabled = true;
         if (bgColorBtn) bgColorBtn.disabled = true;
+        
+        console.log('Restudio Documents initialized successfully');
     }
 
     // Start the application
