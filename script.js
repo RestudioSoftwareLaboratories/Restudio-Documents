@@ -1,11 +1,9 @@
 // ========== SECURITY UTILITIES ==========
 
-// 1. Sanitization - منع هجمات XSS
 function sanitizeText(text) {
     if (text === null || text === undefined) return '';
     if (typeof text !== 'string') return String(text);
-    
-    const map = {
+    var map = {
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
@@ -15,97 +13,57 @@ function sanitizeText(text) {
         '=': '&#x3D;',
         '`': '&#x60;'
     };
-    return text.replace(/[&<>"'/=`]/g, function(match) {
-        return map[match];
-    });
+    return text.replace(/[&<>"'/=`]/g, function(match) { return map[match]; });
 }
 
-// التحقق من صحة النص (منع الأكواد الضارة)
 function isValidText(text) {
     if (typeof text !== 'string') return false;
-    const dangerousPatterns = [
-        /javascript:/i,
-        /on\w+\s*=/i,
-        /<script/i,
-        /<iframe/i,
-        /<object/i,
-        /<embed/i,
-        /data:text\/html/i,
-        /vbscript:/i
+    var dangerousPatterns = [
+        /javascript:/i, /on\w+\s*=/i, /<script/i, /<iframe/i,
+        /<object/i, /<embed/i, /data:text\/html/i, /vbscript:/i
     ];
-    return !dangerousPatterns.some(pattern => pattern.test(text));
+    for (var i = 0; i < dangerousPatterns.length; i++) {
+        if (dangerousPatterns[i].test(text)) return false;
+    }
+    return true;
 }
 
-// 2. التحقق من صحة الملفات المستوردة
 function validateREDCFile(data) {
-    if (!data || typeof data !== 'object') {
-        throw new Error('Invalid file format: Data is not an object');
-    }
-    
-    const MAX_FILE_SIZE_MB = 20;
-    const jsonString = JSON.stringify(data);
-    const sizeInMB = new Blob([jsonString]).size / (1024 * 1024);
-    if (sizeInMB > MAX_FILE_SIZE_MB) {
-        throw new Error('File too large: ' + sizeInMB.toFixed(2) + 'MB (max ' + MAX_FILE_SIZE_MB + 'MB)');
-    }
-    
-    if (data.objects && !Array.isArray(data.objects)) {
-        throw new Error('Invalid file: Objects must be an array');
-    }
-    
+    if (!data || typeof data !== 'object') throw new Error('Invalid file format');
+    var MAX_FILE_SIZE_MB = 20;
+    var jsonString = JSON.stringify(data);
+    var sizeInMB = new Blob([jsonString]).size / (1024 * 1024);
+    if (sizeInMB > MAX_FILE_SIZE_MB) throw new Error('File too large: ' + sizeInMB.toFixed(2) + 'MB (max ' + MAX_FILE_SIZE_MB + 'MB)');
+    if (data.objects && !Array.isArray(data.objects)) throw new Error('Invalid file: Objects must be an array');
     if (data.objects) {
-        for (let i = 0; i < data.objects.length; i++) {
-            const obj = data.objects[i];
-            if (!obj || typeof obj !== 'object') {
-                throw new Error('Invalid object at index ' + i);
-            }
-            const allowedTypes = ['textbox', 'rect', 'circle', 'image', 'group'];
-            if (obj.type && !allowedTypes.includes(obj.type)) {
-                throw new Error('Invalid object type: ' + obj.type);
-            }
+        for (var i = 0; i < data.objects.length; i++) {
+            var obj = data.objects[i];
+            if (!obj || typeof obj !== 'object') throw new Error('Invalid object at index ' + i);
+            var allowedTypes = ['textbox', 'rect', 'circle', 'image', 'group'];
+            if (obj.type && allowedTypes.indexOf(obj.type) === -1) throw new Error('Invalid object type: ' + obj.type);
             if (obj.type === 'textbox' && obj.text) {
-                if (!isValidText(obj.text)) {
-                    throw new Error('Suspicious content detected in text object');
-                }
+                if (!isValidText(obj.text)) throw new Error('Suspicious content detected in text object');
                 obj.text = sanitizeText(obj.text);
             }
         }
     }
-    
     return true;
 }
 
-// 3. التحقق من الحدود
 function validateCanvasAccess(canvasInstance) {
-    if (!canvasInstance) {
-        console.warn('Canvas not initialized');
-        return false;
-    }
-    if (typeof canvasInstance.getActiveObject !== 'function') {
-        console.warn('Canvas is not properly initialized');
-        return false;
-    }
+    if (!canvasInstance) { console.warn('Canvas not initialized'); return false; }
+    if (typeof canvasInstance.getActiveObject !== 'function') { console.warn('Canvas is not properly initialized'); return false; }
     return true;
 }
 
 function getActiveObjectSafe(canvasInstance) {
     if (!validateCanvasAccess(canvasInstance)) return null;
-    try {
-        return canvasInstance.getActiveObject();
-    } catch (err) {
-        console.error('Error getting active object:', err);
-        return null;
-    }
+    try { return canvasInstance.getActiveObject(); } catch (err) { console.error('Error getting active object:', err); return null; }
 }
 
 function getActiveObjectsSafe(canvasInstance) {
     if (!validateCanvasAccess(canvasInstance)) return [];
-    try {
-        return canvasInstance.getActiveObjects() || [];
-    } catch (err) {
-        console.error('Error getting active objects:', err);
-        return [];
-    }
+    try { return canvasInstance.getActiveObjects() || []; } catch (err) { console.error('Error getting active objects:', err); return []; }
 }
 
 // ========== MAIN APPLICATION ==========
@@ -113,135 +71,77 @@ function getActiveObjectsSafe(canvasInstance) {
 (function() {
     'use strict';
     
-    // DOM references
-    const container = document.getElementById('fabric-canvas-container');
-    const zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
-    const undoBtn = document.querySelector('[data-action="undo"]');
-    const redoBtn = document.querySelector('[data-action="redo"]');
-    const boldBtn = document.querySelector('[data-action="bold"]');
-    const italicBtn = document.querySelector('[data-action="italic"]');
-    const underlineBtn = document.querySelector('[data-action="underline"]');
-    const alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
-    const alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
-    const alignRightBtn = document.querySelector('[data-action="alignRight"]');
-    const fillColorBtn = document.getElementById('fillColorBtn');
-    const bgColorBtn = document.getElementById('bgColorBtn');
+    var container = document.getElementById('fabric-canvas-container');
+    var zoomLevelDisplay = document.getElementById('zoomLevelDisplay');
+    var undoBtn = document.querySelector('[data-action="undo"]');
+    var redoBtn = document.querySelector('[data-action="redo"]');
+    var boldBtn = document.querySelector('[data-action="bold"]');
+    var italicBtn = document.querySelector('[data-action="italic"]');
+    var underlineBtn = document.querySelector('[data-action="underline"]');
+    var alignLeftBtn = document.querySelector('[data-action="alignLeft"]');
+    var alignCenterBtn = document.querySelector('[data-action="alignCenter"]');
+    var alignRightBtn = document.querySelector('[data-action="alignRight"]');
+    var fillColorBtn = document.getElementById('fillColorBtn');
+    var bgColorBtn = document.getElementById('bgColorBtn');
 
-    // State
-    let canvas = null;
-    let historyStack = [];
-    let historyIndex = -1;
-    let zoomLevel = 1;
-    let historySaveTimer = null;
-    let hasUnsavedChanges = false;
-    let isInitialized = false;
+    var canvas = null;
+    var historyStack = [];
+    var historyIndex = -1;
+    var zoomLevel = 1;
+    var historySaveTimer = null;
+    var hasUnsavedChanges = false;
+    var isInitialized = false;
 
-    // ============ Canvas Initialization ============
     function initCanvas() {
-        if (!container) {
-            console.error('Container not found');
-            return;
-        }
-
-        // Remove existing canvas
-        const existingCanvas = document.getElementById('fabric-canvas');
-        if (existingCanvas) {
-            existingCanvas.remove();
-        }
-
-        // إنشاء عنصر كانفس جديد مع fallback للأبعاد
-        const newCanvasElem = document.createElement('canvas');
+        if (!container) { console.error('Container not found'); return; }
+        var existingCanvas = document.getElementById('fabric-canvas');
+        if (existingCanvas) existingCanvas.remove();
+        var newCanvasElem = document.createElement('canvas');
         newCanvasElem.id = 'fabric-canvas';
-        const containerWidth = container.clientWidth || 900;
-        const containerHeight = container.clientHeight || 600;
-        newCanvasElem.width = containerWidth;
-        newCanvasElem.height = containerHeight;
-        
-        // تفريغ الحاوية وإضافة الكانفس
+        newCanvasElem.width = container.clientWidth || 900;
+        newCanvasElem.height = container.clientHeight || 600;
         container.innerHTML = '';
         container.appendChild(newCanvasElem);
 
         try {
-            // تهيئة Fabric.js مع إعدادات تحديد محسّنة
             canvas = new fabric.Canvas('fabric-canvas', {
                 preserveObjectStacking: true,
                 selection: true,
                 renderOnAddRemove: true,
-                // تحسينات مرئية للتحديد
                 selectionColor: 'rgba(0, 100, 200, 0.2)',
                 selectionDashArray: [5, 5],
-                // ضبط اكتشاف الأهداف بدقة أعلى
+                evented: true,
                 perPixelTargetFind: true,
-                targetFindTolerance: 8,   // زيادة التسامح لتسهيل التحديد
-                interactive: true,
+                targetFindTolerance: 3,
+                interactive: true
             });
-
-            // تعيين الأبعاد مع fallback
-            canvas.setWidth(containerWidth);
-            canvas.setHeight(containerHeight);
-            
+            canvas.setWidth(container.clientWidth);
+            canvas.setHeight(container.clientHeight);
             canvas.renderAll();
-
-            // ربط الأحداث
             setupCanvasEvents();
-
             isInitialized = true;
             resetHistoryFromCurrentCanvas();
             updateZoomDisplay();
             updateUndoRedoButtons();
-            
-            // تعطيل أزرار الألوان مبدئياً
             if (fillColorBtn) fillColorBtn.disabled = true;
             if (bgColorBtn) bgColorBtn.disabled = true;
-
             console.log('Canvas initialized successfully');
-
         } catch (err) {
             console.error('Error initializing canvas:', err);
             isInitialized = false;
         }
     }
 
-    // ============ Canvas Events ============
     function setupCanvasEvents() {
         if (!canvas) return;
-
-        // إزالة المستمعات القديمة لمنع التسريبات
-        canvas.off('object:added');
-        canvas.off('object:modified');
-        canvas.off('object:removed');
-        canvas.off('selection:created');
-        canvas.off('selection:updated');
-        canvas.off('selection:cleared');
-        canvas.off('mouse:down');
-        canvas.off('mouse:up');
-
-        // إضافة مستمعات جديدة
-        canvas.on('object:added', function() {
-            scheduleHistorySave();
-        });
-        
-        canvas.on('object:modified', function() {
-            scheduleHistorySave();
-        });
-        
-        canvas.on('object:removed', function() {
-            scheduleHistorySave();
-        });
-        
-        canvas.on('selection:created', function(options) {
-            console.log('Selection created:', options);
-            updateStyleButtonsState();
-        });
-        
-        canvas.on('selection:updated', function(options) {
-            console.log('Selection updated:', options);
-            updateStyleButtonsState();
-        });
-        
+        canvas.off('object:added'); canvas.off('object:modified'); canvas.off('object:removed');
+        canvas.off('selection:created'); canvas.off('selection:updated'); canvas.off('selection:cleared');
+        canvas.on('object:added', function() { scheduleHistorySave(); });
+        canvas.on('object:modified', function() { scheduleHistorySave(); });
+        canvas.on('object:removed', function() { scheduleHistorySave(); });
+        canvas.on('selection:created', function() { updateStyleButtonsState(); });
+        canvas.on('selection:updated', function() { updateStyleButtonsState(); });
         canvas.on('selection:cleared', function() {
-            console.log('Selection cleared');
-            // إعادة تعيين حالات الأزرار
             if (boldBtn) boldBtn.classList.remove('active');
             if (italicBtn) italicBtn.classList.remove('active');
             if (underlineBtn) underlineBtn.classList.remove('active');
@@ -253,23 +153,12 @@ function getActiveObjectsSafe(canvasInstance) {
             if (fillColorBtn) fillColorBtn.disabled = true;
             if (bgColorBtn) bgColorBtn.disabled = true;
         });
-
-        // أحداث الماوس للتشخيص
-        canvas.on('mouse:down', function(options) {
-            console.log('Mouse down on canvas:', options.target ? options.target.type : 'empty');
-        });
-        
-        canvas.on('mouse:up', function(options) {
-            console.log('Mouse up on canvas');
-        });
     }
 
-    // ============ History Management ============
     function saveHistoryState() {
         if (!canvas || !isInitialized) return;
-        
         try {
-            const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
+            var state = JSON.stringify(canvas.toJSON(['id', 'customType']));
             if (historyStack.length === 0 || historyStack[historyIndex] !== state) {
                 historyStack = historyStack.slice(0, historyIndex + 1);
                 historyStack.push(state);
@@ -277,59 +166,43 @@ function getActiveObjectsSafe(canvasInstance) {
                 markAsChanged();
             }
             updateUndoRedoButtons();
-        } catch (err) {
-            console.error('Error saving history:', err);
-        }
+        } catch (err) { console.error('Error saving history:', err); }
     }
 
     function scheduleHistorySave() {
-        if (historySaveTimer) {
-            clearTimeout(historySaveTimer);
-        }
+        if (historySaveTimer) clearTimeout(historySaveTimer);
         historySaveTimer = setTimeout(saveHistoryState, 150);
     }
 
     function resetHistoryFromCurrentCanvas() {
         if (!canvas || !isInitialized) return;
-        
         try {
             historyStack = [];
             historyIndex = -1;
-            const state = JSON.stringify(canvas.toJSON(['id', 'customType']));
+            var state = JSON.stringify(canvas.toJSON(['id', 'customType']));
             historyStack.push(state);
             historyIndex = 0;
             updateUndoRedoButtons();
-        } catch (err) {
-            console.error('Error resetting history:', err);
-        }
+        } catch (err) { console.error('Error resetting history:', err); }
     }
 
     function loadHistoryState() {
         if (!canvas || !isInitialized || historyStack.length === 0) return;
-        
         try {
             canvas.loadFromJSON(historyStack[historyIndex], function() {
                 canvas.renderAll();
                 updateUndoRedoButtons();
                 updateStyleButtonsState();
             });
-        } catch (err) {
-            console.error('Error loading history state:', err);
-        }
+        } catch (err) { console.error('Error loading history state:', err); }
     }
 
     function undo() {
-        if (historyIndex > 0 && canvas && isInitialized) {
-            historyIndex--;
-            loadHistoryState();
-        }
+        if (historyIndex > 0 && canvas && isInitialized) { historyIndex--; loadHistoryState(); }
     }
 
     function redo() {
-        if (historyIndex < historyStack.length - 1 && canvas && isInitialized) {
-            historyIndex++;
-            loadHistoryState();
-        }
+        if (historyIndex < historyStack.length - 1 && canvas && isInitialized) { historyIndex++; loadHistoryState(); }
     }
 
     function updateUndoRedoButtons() {
@@ -337,20 +210,13 @@ function getActiveObjectsSafe(canvasInstance) {
         if (redoBtn) redoBtn.disabled = (historyIndex >= historyStack.length - 1);
     }
 
-    // ============ Change Tracking ============
-    function markAsChanged() {
-        hasUnsavedChanges = true;
-    }
+    function markAsChanged() { hasUnsavedChanges = true; }
 
-    // ============ Style Buttons State ============
-    function isImage(obj) {
-        return obj && obj.type === 'image';
-    }
+    function isImage(obj) { return obj && obj.type === 'image'; }
 
     function updateStyleButtonsState() {
         if (!canvas || !isInitialized) return;
-        
-        const activeObj = getActiveObjectSafe(canvas);
+        var activeObj = getActiveObjectSafe(canvas);
         if (!activeObj) {
             if (boldBtn) boldBtn.classList.remove('active');
             if (italicBtn) italicBtn.classList.remove('active');
@@ -364,22 +230,17 @@ function getActiveObjectsSafe(canvasInstance) {
             if (bgColorBtn) bgColorBtn.disabled = true;
             return;
         }
-
-        const img = isImage(activeObj);
-
+        var img = isImage(activeObj);
         if (activeObj.type === 'textbox') {
             if (boldBtn) boldBtn.classList.toggle('active', activeObj.fontWeight === 'bold');
             if (italicBtn) italicBtn.classList.toggle('active', activeObj.fontStyle === 'italic');
             if (underlineBtn) underlineBtn.classList.toggle('active', !!activeObj.underline);
-            
-            const align = activeObj.textAlign || 'left';
+            var align = activeObj.textAlign || 'left';
             if (alignLeftBtn) alignLeftBtn.classList.toggle('active', align === 'left');
             if (alignCenterBtn) alignCenterBtn.classList.toggle('active', align === 'center');
             if (alignRightBtn) alignRightBtn.classList.toggle('active', align === 'right');
-            
             updateFontSizeCheckmark(activeObj.fontSize);
             updateLineHeightCheckmark(activeObj.lineHeight);
-            
             if (fillColorBtn) fillColorBtn.disabled = false;
             if (bgColorBtn) bgColorBtn.disabled = false;
         } else {
@@ -397,29 +258,28 @@ function getActiveObjectsSafe(canvasInstance) {
     }
 
     function updateFontSizeCheckmark(fontSize) {
-        const items = document.querySelectorAll('#fontSizeMenu .dropdown-item');
-        items.forEach(function(item) {
-            const check = item.querySelector('.check-icon');
+        var items = document.querySelectorAll('#fontSizeMenu .dropdown-item');
+        for (var i = 0; i < items.length; i++) {
+            var check = items[i].querySelector('.check-icon');
             if (check) {
-                const size = parseInt(item.dataset.fontsize);
+                var size = parseInt(items[i].dataset.fontsize);
                 check.style.display = (fontSize && size === fontSize) ? 'inline' : 'none';
             }
-        });
+        }
     }
 
     function updateLineHeightCheckmark(lineHeight) {
-        const items = document.querySelectorAll('#lineHeightMenu .dropdown-item');
-        items.forEach(function(item) {
-            const check = item.querySelector('.check-icon');
+        var items = document.querySelectorAll('#lineHeightMenu .dropdown-item');
+        for (var i = 0; i < items.length; i++) {
+            var check = items[i].querySelector('.check-icon');
             if (check) {
-                const val = parseFloat(item.dataset.lineheight);
+                var val = parseFloat(items[i].dataset.lineheight);
                 check.style.display = (lineHeight && Math.abs(val - lineHeight) < 0.01) ? 'inline' : 'none';
             }
-        });
+        }
     }
 
-    // ============ Color Palette ============
-    const presetColors = [
+    var presetColors = [
         '#ffffff', '#000000', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
         '#1abc9c', '#3498db', '#9b59b6', '#ecf0f1', '#c0392b', '#2980b9',
         '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#f39c12', '#d35400',
@@ -427,615 +287,374 @@ function getActiveObjectsSafe(canvasInstance) {
     ];
 
     function buildColorPalette(gridId, customInputId, callback) {
-        const grid = document.getElementById(gridId);
+        var grid = document.getElementById(gridId);
         if (!grid) return;
-        
         grid.innerHTML = '';
-        
-        presetColors.forEach(function(color) {
-            const swatch = document.createElement('div');
+        for (var i = 0; i < presetColors.length; i++) {
+            var color = presetColors[i];
+            var swatch = document.createElement('div');
             swatch.className = 'color-swatch';
             swatch.style.backgroundColor = color;
-            swatch.addEventListener('click', function(e) {
-                e.stopPropagation();
-                callback(color);
-                const customInput = document.getElementById(customInputId);
-                if (customInput) customInput.value = color;
-                const popup = grid.closest('.color-picker-popup');
-                if (popup) popup.classList.remove('show');
-            });
+            swatch.addEventListener('click', function(c) {
+                return function(e) {
+                    e.stopPropagation();
+                    callback(c);
+                    var customInput = document.getElementById(customInputId);
+                    if (customInput) customInput.value = c;
+                    var popup = grid.closest('.color-picker-popup');
+                    if (popup) popup.classList.remove('show');
+                };
+            }(color));
             grid.appendChild(swatch);
-        });
-        
-        const customInput = document.getElementById(customInputId);
+        }
+        var customInput = document.getElementById(customInputId);
         if (customInput) {
-            customInput.addEventListener('input', function(e) {
-                callback(e.target.value);
-            });
+            customInput.addEventListener('input', function(e) { callback(e.target.value); });
         }
-    }
-
-    // ============ Canvas Operations ============
-    function newCanvas() {
-        if (!canvas || !isInitialized) return;
-        
-        if (hasUnsavedChanges) {
-            if (!confirm('You have unsaved changes. Are you sure you want to create a new canvas?')) {
-                return;
-            }
-        }
-        
-        canvas.clear();
-        canvas.backgroundColor = '#2b2b2b';
-        zoomLevel = 1;
-        canvas.setZoom(1);
-        canvas.renderAll();
-        resetHistoryFromCurrentCanvas();
-        updateZoomDisplay();
-        hasUnsavedChanges = false;
     }
 
     function addTextBox() {
         if (!canvas || !isInitialized) return;
-        
-        const textbox = new fabric.Textbox('New Text', {
-            left: 100,
-            top: 100,
-            width: 200,
-            fontSize: 24,
-            fill: '#ffffff',
-            fontFamily: 'Segoe UI',
-            hasControls: true,
-            hasBorders: true,
-            selectable: true,
-            evented: true,
-            hoverCursor: 'pointer',
-            moveCursor: 'move',
-            // إزالة perPixelTargetFind:true لتحسين التحديد
-            perPixelTargetFind: false,
+        var textbox = new fabric.Textbox('New Text', {
+            left: 100, top: 100, width: 200, fontSize: 24, fill: '#ffffff',
+            fontFamily: 'Segoe UI', hasControls: true, hasBorders: true,
+            selectable: true, evented: true, hoverCursor: 'pointer', moveCursor: 'move', perPixelTargetFind: true
         });
-        
         canvas.add(textbox);
         canvas.setActiveObject(textbox);
         canvas.renderAll();
         scheduleHistorySave();
-        console.log('Text box added and selected');
     }
 
     function addRectangle() {
         if (!canvas || !isInitialized) return;
-        
-        const rect = new fabric.Rect({
-            left: 150,
-            top: 150,
-            width: 120,
-            height: 80,
-            fill: '#3498db',
-            stroke: '#ffffff',
-            strokeWidth: 2,
-            selectable: true,
-            evented: true,
-            hoverCursor: 'pointer',
-            moveCursor: 'move',
-            // عدم استخدام perPixelTargetFind للمستطيل لتسهيل التحديد
-            perPixelTargetFind: false,
+        var rect = new fabric.Rect({
+            left: 150, top: 150, width: 120, height: 80, fill: '#3498db',
+            stroke: '#ffffff', strokeWidth: 2, selectable: true, evented: true,
+            hoverCursor: 'pointer', moveCursor: 'move', perPixelTargetFind: true
         });
-        
         canvas.add(rect);
         canvas.setActiveObject(rect);
         canvas.renderAll();
         scheduleHistorySave();
-        console.log('Rectangle added and selected');
     }
 
     function addCircle() {
         if (!canvas || !isInitialized) return;
-        
-        const circle = new fabric.Circle({
-            left: 200,
-            top: 200,
-            radius: 50,
-            fill: '#e67e22',
-            stroke: '#fff',
-            strokeWidth: 2,
-            selectable: true,
-            evented: true,
-            hoverCursor: 'pointer',
-            moveCursor: 'move',
-            perPixelTargetFind: false,
+        var circle = new fabric.Circle({
+            left: 200, top: 200, radius: 50, fill: '#e67e22', stroke: '#fff',
+            strokeWidth: 2, selectable: true, evented: true,
+            hoverCursor: 'pointer', moveCursor: 'move', perPixelTargetFind: true
         });
-        
         canvas.add(circle);
         canvas.setActiveObject(circle);
         canvas.renderAll();
         scheduleHistorySave();
-        console.log('Circle added and selected');
     }
 
-    function addImageFromFile() {
-        const input = document.getElementById('imageFileInput');
-        if (input) input.click();
-    }
+    function addImageFromFile() { var input = document.getElementById('imageFileInput'); if (input) input.click(); }
 
     function addQRCode() {
         if (!canvas || !isInitialized) return;
-        
-        const text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
+        var text = prompt('Enter text or URL for the QR code:', 'https://restudio.com');
         if (!text || !text.trim()) return;
-        
-        const sanitizedText = sanitizeText(text.trim());
-        if (!isValidText(sanitizedText)) {
-            alert('Invalid text detected. Please enter a valid URL or text.');
-            return;
-        }
-        
-        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(sanitizedText);
-        
+        var sanitizedText = sanitizeText(text.trim());
+        if (!isValidText(sanitizedText)) { alert('Invalid text detected.'); return; }
+        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(sanitizedText);
         fabric.Image.fromURL(qrUrl, function(img) {
             if (!canvas || !isInitialized) return;
-            
             img.set({
                 left: (canvas.width - img.width * img.scaleX) / 2,
                 top: (canvas.height - img.height * img.scaleY) / 2,
-                selectable: true,
-                evented: true,
-                hoverCursor: 'pointer',
-                moveCursor: 'move',
-                perPixelTargetFind: false, // تسهيل التحديد
+                selectable: true, evented: true, hoverCursor: 'pointer', moveCursor: 'move', perPixelTargetFind: true
             });
-            
             canvas.add(img);
             canvas.setActiveObject(img);
             canvas.renderAll();
             scheduleHistorySave();
-            console.log('QR code added and selected');
         }, { crossOrigin: 'anonymous' });
     }
 
     function handleImageFileSelect(event) {
-        const file = event.target.files[0];
+        var file = event.target.files[0];
         if (!file) return;
-        
-        if (!file.type.startsWith('image/')) {
-            alert('Please select a valid image file.');
-            event.target.value = '';
-            return;
-        }
-        
-        const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-        if (file.size > MAX_IMAGE_SIZE) {
-            alert('Image file too large: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB (max 10MB)');
-            event.target.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
+        if (!file.type.startsWith('image/')) { alert('Please select a valid image file.'); event.target.value = ''; return; }
+        var MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+        if (file.size > MAX_IMAGE_SIZE) { alert('Image file too large: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB (max 10MB)'); event.target.value = ''; return; }
+        var reader = new FileReader();
         reader.onload = function(e) {
             if (!canvas || !isInitialized) return;
-            
             fabric.Image.fromURL(e.target.result, function(img) {
                 if (!canvas || !isInitialized) return;
-                
-                const maxWidth = canvas.width * 0.6;
-                const maxHeight = canvas.height * 0.6;
-                
+                var maxWidth = canvas.width * 0.6;
+                var maxHeight = canvas.height * 0.6;
                 if (img.width > maxWidth || img.height > maxHeight) {
-                    const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                    var scale = Math.min(maxWidth / img.width, maxHeight / img.height);
                     img.scale(scale);
-                } else {
-                    img.scale(1);
-                }
-                
+                } else { img.scale(1); }
                 img.set({
                     left: (canvas.width - img.width * img.scaleX) / 2,
                     top: (canvas.height - img.height * img.scaleY) / 2,
-                    selectable: true,
-                    evented: true,
-                    hoverCursor: 'pointer',
-                    moveCursor: 'move',
-                    perPixelTargetFind: false, // تسهيل التحديد
+                    selectable: true, evented: true, hoverCursor: 'pointer', moveCursor: 'move', perPixelTargetFind: true
                 });
-                
                 canvas.add(img);
                 canvas.setActiveObject(img);
                 canvas.renderAll();
                 scheduleHistorySave();
-                console.log('Image added and selected');
             }, { crossOrigin: 'anonymous' });
         };
-        
-        reader.onerror = function() {
-            alert('Failed to load image file.');
-        };
-        
+        reader.onerror = function() { alert('Failed to load image file.'); };
         reader.readAsDataURL(file);
         event.target.value = '';
     }
 
     function deleteSelected() {
         if (!canvas || !isInitialized) return;
-        
-        const active = canvas.getActiveObjects();
+        var active = canvas.getActiveObjects();
         if (active.length > 0) {
-            active.forEach(function(obj) {
-                canvas.remove(obj);
-            });
+            for (var i = 0; i < active.length; i++) { canvas.remove(active[i]); }
             canvas.discardActiveObject();
             canvas.renderAll();
             scheduleHistorySave();
-            console.log('Selected objects deleted');
         }
     }
 
     function bringForward() {
         if (!canvas || !isInitialized) return;
-        
-        const obj = getActiveObjectSafe(canvas);
-        if (obj) {
-            canvas.bringForward(obj);
-            canvas.renderAll();
-            scheduleHistorySave();
-        }
+        var obj = getActiveObjectSafe(canvas);
+        if (obj) { canvas.bringForward(obj); canvas.renderAll(); scheduleHistorySave(); }
     }
 
     function sendBackward() {
         if (!canvas || !isInitialized) return;
-        
-        const obj = getActiveObjectSafe(canvas);
-        if (obj) {
-            canvas.sendBackwards(obj);
-            canvas.renderAll();
-            scheduleHistorySave();
-        }
+        var obj = getActiveObjectSafe(canvas);
+        if (obj) { canvas.sendBackwards(obj); canvas.renderAll(); scheduleHistorySave(); }
     }
 
     function applyToSelected(callback) {
         if (!canvas || !isInitialized) return;
-        
-        const actives = canvas.getActiveObjects();
+        var actives = canvas.getActiveObjects();
         if (actives.length > 0) {
-            actives.forEach(function(obj) {
-                callback(obj);
-            });
+            for (var i = 0; i < actives.length; i++) { callback(actives[i]); }
             canvas.renderAll();
             scheduleHistorySave();
             updateStyleButtonsState();
         }
     }
 
-    function setBold() {
-        applyToSelected(function(obj) {
-            if (obj.type === 'textbox') {
-                obj.fontWeight = (obj.fontWeight === 'bold') ? 'normal' : 'bold';
-            }
-        });
-    }
-
-    function setItalic() {
-        applyToSelected(function(obj) {
-            if (obj.type === 'textbox') {
-                obj.fontStyle = (obj.fontStyle === 'italic') ? 'normal' : 'italic';
-            }
-        });
-    }
-
-    function setUnderline() {
-        applyToSelected(function(obj) {
-            if (obj.type === 'textbox') {
-                obj.underline = !obj.underline;
-            }
-        });
-    }
-
-    function setFontSize(size) {
-        applyToSelected(function(obj) {
-            if (obj.fontSize !== undefined) {
-                obj.fontSize = parseInt(size);
-            }
-        });
-        
-        const container = document.getElementById('fontSizeContainer');
-        if (container) container.classList.remove('open');
-    }
-
-    function setLineHeight(height) {
-        applyToSelected(function(obj) {
-            if (obj.lineHeight !== undefined) {
-                obj.lineHeight = parseFloat(height);
-            }
-        });
-        
-        const container = document.getElementById('lineHeightContainer');
-        if (container) container.classList.remove('open');
-    }
-
-    function setFillColor(color) {
-        applyToSelected(function(obj) {
-            if (obj.type !== 'image') {
-                obj.set('fill', color);
-            }
-        });
-    }
-
-    function setBackgroundColor(color) {
-        applyToSelected(function(obj) {
-            if (obj.type === 'textbox') {
-                obj.set('backgroundColor', color);
-            }
-        });
-    }
-
-    function setTextAlign(align) {
-        applyToSelected(function(obj) {
-            if (obj.textAlign !== undefined) {
-                obj.textAlign = align;
-            }
-        });
-    }
-
-    function setCanvasBgColor(color) {
-        if (!canvas || !isInitialized) return;
-        
-        canvas.setBackgroundColor(color, function() {
-            canvas.renderAll();
-        });
-        markAsChanged();
-    }
-
-    function increaseIndent() {
-        applyToSelected(function(obj) {
-            if (obj.type === 'textbox') {
-                obj.text = '    ' + obj.text;
-            }
-        });
-    }
-
-    function decreaseIndent() {
-        applyToSelected(function(obj) {
-            if (obj.type === 'textbox') {
-                const trimmed = obj.text.replace(/^ {1,4}/, '');
-                obj.text = trimmed;
-            }
-        });
-    }
-
+    function setBold() { applyToSelected(function(obj) { if (obj.type === 'textbox') { obj.fontWeight = (obj.fontWeight === 'bold') ? 'normal' : 'bold'; } }); }
+    function setItalic() { applyToSelected(function(obj) { if (obj.type === 'textbox') { obj.fontStyle = (obj.fontStyle === 'italic') ? 'normal' : 'italic'; } }); }
+    function setUnderline() { applyToSelected(function(obj) { if (obj.type === 'textbox') { obj.underline = !obj.underline; } }); }
+    function setFontSize(size) { applyToSelected(function(obj) { if (obj.fontSize !== undefined) { obj.fontSize = parseInt(size); } }); var container = document.getElementById('fontSizeContainer'); if (container) container.classList.remove('open'); }
+    function setLineHeight(height) { applyToSelected(function(obj) { if (obj.lineHeight !== undefined) { obj.lineHeight = parseFloat(height); } }); var container = document.getElementById('lineHeightContainer'); if (container) container.classList.remove('open'); }
+    function setFillColor(color) { applyToSelected(function(obj) { if (obj.type !== 'image') { obj.set('fill', color); } }); }
+    function setBackgroundColor(color) { applyToSelected(function(obj) { if (obj.type === 'textbox') { obj.set('backgroundColor', color); } }); }
+    function setTextAlign(align) { applyToSelected(function(obj) { if (obj.textAlign !== undefined) { obj.textAlign = align; } }); }
+    function setCanvasBgColor(color) { if (!canvas || !isInitialized) return; canvas.setBackgroundColor(color, function() { canvas.renderAll(); }); markAsChanged(); }
+    function increaseIndent() { applyToSelected(function(obj) { if (obj.type === 'textbox') { obj.text = '    ' + obj.text; } }); }
+    function decreaseIndent() { applyToSelected(function(obj) { if (obj.type === 'textbox') { obj.text = obj.text.replace(/^ {1,4}/, ''); } }); }
     function transformText(type) {
         applyToSelected(function(obj) {
             if (obj.type === 'textbox') {
-                switch (type) {
-                    case 'uppercase':
-                        obj.text = obj.text.toUpperCase();
-                        break;
-                    case 'lowercase':
-                        obj.text = obj.text.toLowerCase();
-                        break;
-                    case 'capitalize':
-                        obj.text = obj.text.replace(/\b\w/g, function(c) {
-                            return c.toUpperCase();
-                        });
-                        break;
-                }
+                if (type === 'uppercase') obj.text = obj.text.toUpperCase();
+                else if (type === 'lowercase') obj.text = obj.text.toLowerCase();
+                else if (type === 'capitalize') obj.text = obj.text.replace(/\b\w/g, function(c) { return c.toUpperCase(); });
             }
         });
-        
-        const container = document.getElementById('textTransformContainer');
+        var container = document.getElementById('textTransformContainer');
         if (container) container.classList.remove('open');
     }
 
-    function updateZoomDisplay() {
-        if (zoomLevelDisplay) {
-            zoomLevelDisplay.textContent = Math.round(zoomLevel * 100) + '%';
-        }
-    }
-
-    function zoomIn() {
-        if (!canvas || !isInitialized) return;
-        
-        zoomLevel = Math.min(2, zoomLevel + 0.1);
-        canvas.setZoom(zoomLevel);
-        canvas.renderAll();
-        updateZoomDisplay();
-    }
-
-    function zoomOut() {
-        if (!canvas || !isInitialized) return;
-        
-        zoomLevel = Math.max(0.5, zoomLevel - 0.1);
-        canvas.setZoom(zoomLevel);
-        canvas.renderAll();
-        updateZoomDisplay();
-    }
+    function updateZoomDisplay() { if (zoomLevelDisplay) { zoomLevelDisplay.textContent = Math.round(zoomLevel * 100) + '%'; } }
+    function zoomIn() { if (!canvas || !isInitialized) return; zoomLevel = Math.min(2, zoomLevel + 0.1); canvas.setZoom(zoomLevel); canvas.renderAll(); updateZoomDisplay(); }
+    function zoomOut() { if (!canvas || !isInitialized) return; zoomLevel = Math.max(0.5, zoomLevel - 0.1); canvas.setZoom(zoomLevel); canvas.renderAll(); updateZoomDisplay(); }
 
     function exportAsREDC() {
         if (!canvas || !isInitialized) return;
-        
         try {
-            const dataStr = JSON.stringify(canvas.toJSON(['id']), null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            var dataStr = JSON.stringify(canvas.toJSON(['id']), null, 2);
+            var blob = new Blob([dataStr], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
             a.download = 'canvas.redc';
             a.click();
             URL.revokeObjectURL(url);
             hasUnsavedChanges = false;
-        } catch (err) {
-            alert('Error exporting file: ' + err.message);
-        }
+        } catch (err) { alert('Error exporting file: ' + err.message); }
     }
 
     function importJSON(file) {
         if (!canvas || !isInitialized) return;
-        
-        if (hasUnsavedChanges) {
-            if (!confirm('Importing will replace the current canvas content. Are you sure?')) {
-                return;
-            }
-        }
-        
-        const reader = new FileReader();
+        if (hasUnsavedChanges && !confirm('Importing will replace the current canvas content. Are you sure?')) return;
+        var reader = new FileReader();
         reader.onload = function(e) {
             try {
-                const json = JSON.parse(e.target.result);
+                var json = JSON.parse(e.target.result);
                 validateREDCFile(json);
-                
                 canvas.loadFromJSON(json, function() {
                     canvas.renderAll();
                     resetHistoryFromCurrentCanvas();
                     updateZoomDisplay();
                     hasUnsavedChanges = false;
-                    console.log('File imported successfully');
                 });
-            } catch (err) {
-                alert('Import failed: ' + err.message);
-            }
+            } catch (err) { alert('Import failed: ' + err.message); }
         };
-        
-        reader.onerror = function() {
-            alert('Error reading file.');
-        };
-        
+        reader.onerror = function() { alert('Error reading file.'); };
         reader.readAsText(file);
     }
 
-    // ============ Event Listeners Setup ============
+    // ========== KEYBOARD SHORTCUTS (المصلحة) ==========
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(e) {
+            // تجاهل إذا كان التركيز على حقل إدخال نصي
+            var tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+                return;
+            }
+
+            // Ctrl+Z - Undo
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+                return;
+            }
+            // Ctrl+Y - Redo
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                redo();
+                return;
+            }
+            // Delete - Delete selected
+            if (e.key === 'Delete' && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                deleteSelected();
+                return;
+            }
+            // Escape - Exit focus mode
+            if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
+                document.body.classList.remove('focus-mode');
+                return;
+            }
+        });
+    }
+
+    // ========== Event Listeners ==========
     function setupEventListeners() {
-        // Toolbar actions
-        const toolbar = document.getElementById('toolbar');
+        var toolbar = document.getElementById('toolbar');
         if (toolbar) {
             toolbar.addEventListener('click', function(e) {
-                const btn = e.target.closest('.tool-btn');
+                var btn = e.target.closest('.tool-btn');
                 if (!btn || btn.closest('.dropdown-container')) return;
-                
-                const action = btn.dataset.action;
-                if (action && actionsMap[action]) {
-                    actionsMap[action]();
+                var action = btn.dataset.action;
+                if (action) {
+                    switch(action) {
+                        case 'undo': undo(); break;
+                        case 'redo': redo(); break;
+                        case 'deleteSelected': deleteSelected(); break;
+                        case 'addText': addTextBox(); break;
+                        case 'addImage': addImageFromFile(); break;
+                        case 'addRectangle': addRectangle(); break;
+                        case 'addCircle': addCircle(); break;
+                        case 'addQR': addQRCode(); break;
+                        case 'bold': setBold(); break;
+                        case 'italic': setItalic(); break;
+                        case 'underline': setUnderline(); break;
+                        case 'alignLeft': setTextAlign('left'); break;
+                        case 'alignCenter': setTextAlign('center'); break;
+                        case 'alignRight': setTextAlign('right'); break;
+                        case 'bringForward': bringForward(); break;
+                        case 'sendBackward': sendBackward(); break;
+                        case 'zoomIn': zoomIn(); break;
+                        case 'zoomOut': zoomOut(); break;
+                        case 'focusMode': document.body.classList.toggle('focus-mode'); break;
+                        case 'exportRedc': exportAsREDC(); break;
+                        case 'indentInc': increaseIndent(); break;
+                        case 'indentDec': decreaseIndent(); break;
+                    }
                 }
             });
         }
 
-        // Image file input
-        const imageInput = document.getElementById('imageFileInput');
-        if (imageInput) {
-            imageInput.addEventListener('change', handleImageFileSelect);
+        var imageInput = document.getElementById('imageFileInput');
+        if (imageInput) { imageInput.addEventListener('change', handleImageFileSelect); }
+
+        var importBtn = document.getElementById('importJsonBtn');
+        var importInput = document.getElementById('importFileInput');
+        if (importBtn && importInput) {
+            importBtn.addEventListener('click', function() { importInput.click(); });
+            importInput.addEventListener('change', function(e) { if (e.target.files[0]) { importJSON(e.target.files[0]); e.target.value = ''; } });
         }
 
-        // Font size items
-        document.querySelectorAll('[data-fontsize]').forEach(function(item) {
-            item.addEventListener('click', function() {
-                setFontSize(this.dataset.fontsize);
-                updateFontSizeCheckmark(parseInt(this.dataset.fontsize));
-            });
-        });
+        var exitFocusBtn = document.getElementById('exitFocusBtn');
+        if (exitFocusBtn) { exitFocusBtn.addEventListener('click', function() { document.body.classList.remove('focus-mode'); }); }
 
-        // Line height items
-        document.querySelectorAll('[data-lineheight]').forEach(function(item) {
-            item.addEventListener('click', function() {
-                setLineHeight(this.dataset.lineheight);
-                updateLineHeightCheckmark(parseFloat(this.dataset.lineheight));
-            });
-        });
-
-        // Text transform items
-        document.querySelectorAll('[data-transform]').forEach(function(item) {
-            item.addEventListener('click', function() {
-                transformText(this.dataset.transform);
-            });
-        });
-
-        // Color pickers
         buildColorPalette('fillColorGrid', 'fillColorCustom', setFillColor);
         buildColorPalette('bgColorGrid', 'bgColorCustom', setBackgroundColor);
         buildColorPalette('canvasBgGrid', 'canvasBgCustom', setCanvasBgColor);
 
-        // Color dropdowns
         setupColorDropdown('fillColorContainer', 'fillColorPicker');
         setupColorDropdown('bgColorContainer', 'bgColorPicker');
         setupColorDropdown('canvasBgContainer', 'canvasBgPicker');
 
-        // Regular dropdowns
-        document.querySelectorAll(
-            '.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)'
-        ).forEach(function(container) {
-            const btn = container.querySelector('.tool-btn');
+        var fontSizeItems = document.querySelectorAll('[data-fontsize]');
+        for (var fi = 0; fi < fontSizeItems.length; fi++) {
+            fontSizeItems[fi].addEventListener('click', function() {
+                setFontSize(this.dataset.fontsize);
+                updateFontSizeCheckmark(parseInt(this.dataset.fontsize));
+                document.getElementById('fontSizeContainer').classList.remove('open');
+            });
+        }
+
+        var lineHeightItems = document.querySelectorAll('[data-lineheight]');
+        for (var lh = 0; lh < lineHeightItems.length; lh++) {
+            lineHeightItems[lh].addEventListener('click', function() {
+                setLineHeight(this.dataset.lineheight);
+                updateLineHeightCheckmark(parseFloat(this.dataset.lineheight));
+                document.getElementById('lineHeightContainer').classList.remove('open');
+            });
+        }
+
+        var transformItems = document.querySelectorAll('[data-transform]');
+        for (var tr = 0; tr < transformItems.length; tr++) {
+            transformItems[tr].addEventListener('click', function() {
+                transformText(this.dataset.transform);
+                document.getElementById('textTransformContainer').classList.remove('open');
+            });
+        }
+
+        var dropdowns = document.querySelectorAll('.dropdown-container:not(#fillColorContainer):not(#bgColorContainer):not(#canvasBgContainer)');
+        for (var d = 0; d < dropdowns.length; d++) {
+            var container = dropdowns[d];
+            var btn = container.querySelector('.tool-btn');
             if (btn) {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    document.querySelectorAll('.color-picker-popup.show').forEach(function(p) {
-                        p.classList.remove('show');
-                    });
-                    container.classList.toggle('open');
-                });
+                btn.addEventListener('click', function(c) {
+                    return function(e) {
+                        e.stopPropagation();
+                        var popups = document.querySelectorAll('.color-picker-popup.show');
+                        for (var p = 0; p < popups.length; p++) { popups[p].classList.remove('show'); }
+                        c.classList.toggle('open');
+                    };
+                }(container));
             }
-            container.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        });
+            container.addEventListener('click', function(e) { e.stopPropagation(); });
+        }
 
-        // Global click to close dropdowns
         document.addEventListener('click', function() {
-            document.querySelectorAll('.dropdown-container.open').forEach(function(c) {
-                c.classList.remove('open');
-            });
-            document.querySelectorAll('.color-picker-popup.show').forEach(function(p) {
-                p.classList.remove('show');
-            });
+            var containers = document.querySelectorAll('.dropdown-container.open');
+            for (var c = 0; c < containers.length; c++) { containers[c].classList.remove('open'); }
+            var popups = document.querySelectorAll('.color-picker-popup.show');
+            for (var p = 0; p < popups.length; p++) { popups[p].classList.remove('show'); }
         });
 
-        // Import button
-        const importBtn = document.getElementById('importJsonBtn');
-        const importInput = document.getElementById('importFileInput');
-        if (importBtn && importInput) {
-            importBtn.addEventListener('click', function() {
-                importInput.click();
-            });
-            importInput.addEventListener('change', function(e) {
-                if (e.target.files[0]) {
-                    importJSON(e.target.files[0]);
-                    e.target.value = '';
-                }
-            });
-        }
-
-        // Exit focus button
-        const exitFocusBtn = document.getElementById('exitFocusBtn');
-        if (exitFocusBtn) {
-            exitFocusBtn.addEventListener('click', function() {
-                document.body.classList.remove('focus-mode');
-            });
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
-                document.body.classList.remove('focus-mode');
-            }
-            if (e.ctrlKey && e.key === 'z') {
-                e.preventDefault();
-                undo();
-            }
-            if (e.ctrlKey && e.key === 'y') {
-                e.preventDefault();
-                redo();
-            }
-            if (e.key === 'Delete' && !e.ctrlKey && !e.altKey && document.activeElement === document.body) {
-                e.preventDefault();
-                deleteSelected();
-            }
-        });
-
-        // Window resize with fallback
         window.addEventListener('resize', function() {
             if (canvas && container && isInitialized) {
-                const w = container.clientWidth || 900;
-                const h = container.clientHeight || 600;
-                canvas.setWidth(w);
-                canvas.setHeight(h);
+                canvas.setWidth(container.clientWidth);
+                canvas.setHeight(container.clientHeight);
                 canvas.renderAll();
             }
         });
 
-        // Before unload
         window.addEventListener('beforeunload', function(e) {
             if (hasUnsavedChanges) {
                 e.preventDefault();
@@ -1045,76 +664,35 @@ function getActiveObjectsSafe(canvasInstance) {
         });
     }
 
-    // ============ Dropdown Helpers ============
     function setupColorDropdown(containerId, pickerId) {
-        const container = document.getElementById(containerId);
-        const picker = document.getElementById(pickerId);
+        var container = document.getElementById(containerId);
+        var picker = document.getElementById(pickerId);
         if (!container || !picker) return;
-        
-        const btn = container.querySelector('.tool-btn');
+        var btn = container.querySelector('.tool-btn');
         if (!btn) return;
-        
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            
-            document.querySelectorAll('.color-picker-popup.show').forEach(function(p) {
-                if (p !== picker) p.classList.remove('show');
-            });
-            
-            document.querySelectorAll('.dropdown-container.open').forEach(function(d) {
-                if (d !== container) d.classList.remove('open');
-            });
-            
+            var popups = document.querySelectorAll('.color-picker-popup.show');
+            for (var p = 0; p < popups.length; p++) { if (popups[p] !== picker) popups[p].classList.remove('show'); }
+            var containers = document.querySelectorAll('.dropdown-container.open');
+            for (var c = 0; c < containers.length; c++) { if (containers[c] !== container) containers[c].classList.remove('open'); }
             picker.classList.toggle('show');
         });
-        
-        picker.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
+        picker.addEventListener('click', function(e) { e.stopPropagation(); });
     }
 
-    // ============ Actions Map ============
-    const actionsMap = {
-        newDoc: newCanvas,
-        undo: undo,
-        redo: redo,
-        deleteSelected: deleteSelected,
-        addText: addTextBox,
-        addImage: addImageFromFile,
-        addRectangle: addRectangle,
-        addCircle: addCircle,
-        addQR: addQRCode,
-        bold: setBold,
-        italic: setItalic,
-        underline: setUnderline,
-        alignLeft: function() { setTextAlign('left'); },
-        alignCenter: function() { setTextAlign('center'); },
-        alignRight: function() { setTextAlign('right'); },
-        bringForward: bringForward,
-        sendBackward: sendBackward,
-        zoomIn: zoomIn,
-        zoomOut: zoomOut,
-        focusMode: function() { document.body.classList.toggle('focus-mode'); },
-        exportRedc: exportAsREDC,
-        indentInc: increaseIndent,
-        indentDec: decreaseIndent
-    };
-
-    // ============ Initialize ============
     function init() {
         console.log('Initializing Restudio Documents...');
         initCanvas();
         setupEventListeners();
+        setupKeyboardShortcuts();
         updateZoomDisplay();
         updateUndoRedoButtons();
-        
         if (fillColorBtn) fillColorBtn.disabled = true;
         if (bgColorBtn) bgColorBtn.disabled = true;
-        
         console.log('Restudio Documents initialized successfully');
     }
 
-    // Start the application
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
